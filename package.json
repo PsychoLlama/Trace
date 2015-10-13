@@ -1,0 +1,30 @@
+{
+  "name": "tron",
+  "version": "1.0.0",
+  "description": "Real-time multiplayer tron game using GunDB",
+  "main": "gun.js",
+  "scripts": {
+    "test": "prove"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PsychoLlama/Tron.git"
+  },
+  "keywords": [
+    "tron",
+    "game",
+    "html5",
+    "gun",
+    "javascript",
+    "canvas"
+  ],
+  "author": "Jesse Gibson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PsychoLlama/Tron/issues"
+  },
+  "homepage": "https://github.com/PsychoLlama/Tron#readme",
+  "dependencies": {
+    "gun": "^0.2.1"
+  }
+}

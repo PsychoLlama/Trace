@@ -9,7 +9,7 @@
     this.y = y;
     this.color = color;
     this.width = 1;
-    this.velocity = 1;
+    this.velocity = 3;
     this.direction = 'x';
     this.history = [{
       x: x,
@@ -23,21 +23,22 @@
       this[this.direction] += this.velocity;
     },
     turn: function (direction) {
-      if (!direction) {
-        return;
-      }
-      direction = direction.toLowerCase();
       var player = this,
         velocity = Math.abs(player.velocity),
-        playerMoved = true,
         setDirection = function (axis, velocity) {
           if (player.direction === axis) {
             return;
           }
           player.direction = axis;
           player.velocity = velocity;
+
+          player.history.push({
+            x: player.x,
+            y: player.y
+          });
         };
-      switch (direction) {
+
+      switch (direction.toLowerCase()) {
       case 'up':
         setDirection('y', -velocity);
         break;
@@ -51,13 +52,8 @@
         setDirection('x', velocity);
         break;
       default:
-        playerMoved = false;
         return;
       }
-      playerMoved = playerMoved && player.history.push({
-        x: player.x,
-        y: player.y
-      });
     },
     kill: function () {
       this.velocity = 0;
@@ -92,7 +88,7 @@
     resizeCanvas: function () {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      model.movePlayers();
+      view.render();
     },
     drawPlayer: function (player) {
       var offset = player.width / 2;
@@ -130,9 +126,28 @@
       requestAnimationFrame(model.movePlayers);
     },
     hasCollided: function (player) {
-      var last = player.history.length - 1,
-        lastPosition = player.history[last],
-        direction = player.direction;
+      var lastPosition = player.history[player.history.length - 1],
+        direction = player.direction,
+        allWalls = [],
+        collision = false;
+
+      model.players.forEach(function (player) {
+        var walls = [];
+        player.history.sort(function (last, current) {
+          var wall = false;
+          if (last[direction] === current[direction]) {
+            wall = [last[direction], current[direction]];
+          }
+          if (wall) {
+            walls.push(wall);
+          }
+        });
+        allWalls = allWalls.concat(walls);
+      });
+
+      allWalls.forEach(function (wall) {
+        // TODO: Check to see if there is overlap
+      });
 
       return false;
     }
@@ -152,14 +167,14 @@
       });
     },
     gameInput: function (e) {
-      var player = model.players[0];
+      var player = model.players[0],
+        direction;
       if (e.keyCode === 0) {
         return;
       }
       if (e.key.match(/Arrow/)) {
-        model.players.map(function (player) {
-          player.turn(e.key.match(/^Arrow(\w*)$/)[1]);
-        });
+        direction = e.key.match(/^Arrow(\w*)$/)[1];
+        player.turn(direction);
       }
     }
   };
