@@ -1,23 +1,41 @@
 /*globals console, requestAnimationFrame */
 /*jslint plusplus: true */
 
+/*********************************************************
+** Line start is sometimes measured out of order:
+** Sometimes start > end
+** My code assumes the opposite
+** Meaning collisions don't always happen when they should
+**********************************************************/
+
+/*********************************************************
+** Kill order needs to be determined based on how close
+** the head is to the collision.
+** Right now, kill order is based on the position of the
+** player in the model.players array.
+** This means that sometimes, the wrong player is killed.
+**********************************************************/
+
 (function () {
   'use strict';
 
   function Player(color, x, y) {
     var axis = 'x',
       player = this;
+    
     player.x = x;
     player.y = y;
-    player.color = color;
     player.width = 0;
+    player.color = color;
     player.speed = 1;
+    player.original = {
+      speed: player.speed,
+      color: player.color
+    };
     player.direction = 1;
     player.axis = axis;
     player.killed = false;
     player.power = {
-      memColor: player.color,
-      memSpeed: player.speed,
       boost: null
     };
     player.history = [{
@@ -30,7 +48,7 @@
   Player.prototype = {
     constructor: Player,
     toString: function () {
-      return "Player " + this.power.memColor;
+      return "Player " + this.original.color;
     },
     move: function () {
       var step = this.speed * this.direction;
@@ -85,8 +103,8 @@
     unBoost: function () {
       var player = this;
       clearInterval(player.power.boost);
-      player.color = player.power.memColor;
-      player.speed = player.power.memSpeed;
+      player.color = player.original.color;
+      player.speed = player.original.speed;
       player.power.boost = null;
       return this;
     }
@@ -108,7 +126,7 @@
       player: ['green', 'blue', 'red', 'yellow']
     },
     render: function () {
-      view.clear().drawWalls();
+      view.clear().drawWalls().drawWalls().drawWalls();
       model.players.map(view.drawPlayer);
       return this;
     },
@@ -174,7 +192,7 @@
         }
         var opposite = (axis === 'x') ? 'y' : 'x',
           intermediate;
-        if (start > end) {
+        if (start[axis] > end[axis]) {
           intermediate = start;
           start = end;
           end = intermediate;
@@ -262,7 +280,7 @@
       return this;
     },
     gameInput: function (e) {
-      var player = model.players[0],
+      var player = model.players[3],
         arrow,
         axis;
       if (e.keyCode === 0) {
