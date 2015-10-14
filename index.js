@@ -12,7 +12,7 @@
     player.y = y;
     player.width = 0;
     player.color = color;
-    player.speed = 1;
+    player.speed = 3;
     player.original = {
       speed: player.speed,
       color: player.color
@@ -102,7 +102,7 @@
     trail: function () {
       var player = this,
         lastEntry = player.history[player.history.length - 1],
-        captureDistance = (player.speed * 2) * player.direction,
+        captureDistance = player.speed * player.direction,
         perpendicular = player.axis === 'x' ? 'y' : 'x',
         range = Math.abs(lastEntry[player.axis] - player[player.axis]),
         line = {
@@ -250,6 +250,10 @@
     },
     killCollided: function () {
       var player = model.players[1],
+        outOfBounds = player.x < 0 ||
+          player.x > canvas.width ||
+          player.y < 0 ||
+          player.y > canvas.height,
         perpendicular = player.axis === 'x' ? 'y' : 'x',
         lastEntry = player.history[player.history.length - 1],
         walls = model.findLines(perpendicular),
@@ -293,7 +297,7 @@
         .filter(overlapping)
         .length;
 
-      if (collision) {
+      if (collision || outOfBounds) {
         player.kill();
       }
       return this;
@@ -308,7 +312,7 @@
       view.resizeCanvas();
       controller.setPlayers();
       model.movePlayers();
-      //    window.addEventListener('resize', view.resizeCanvas);
+      window.addEventListener('resize', view.resizeCanvas);
       document.body.addEventListener('keydown', controller.gameInput);
       return this;
     },
