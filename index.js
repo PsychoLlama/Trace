@@ -1,28 +1,13 @@
 /*globals console, requestAnimationFrame */
 /*jslint plusplus: true */
 
-/*********************************************************
-** Line start is sometimes measured out of order:
-** Sometimes start > end
-** My code assumes the opposite
-** Meaning collisions don't always happen when they should
-**********************************************************/
-
-/*********************************************************
-** Kill order needs to be determined based on how close
-** the head is to the collision.
-** Right now, kill order is based on the position of the
-** player in the model.players array.
-** This means that sometimes, the wrong player is killed.
-**********************************************************/
-
 (function () {
   'use strict';
 
   function Player(color, x, y) {
     var axis = 'x',
       player = this;
-    
+
     player.x = x;
     player.y = y;
     player.width = 0;
@@ -50,11 +35,13 @@
     toString: function () {
       return "Player " + this.original.color;
     },
+
     move: function () {
       var step = this.speed * this.direction;
       this[this.axis] += step;
       return this;
     },
+
     turn: function (axis, direction) {
       var player = this;
       if (player.axis === axis) {
@@ -70,17 +57,19 @@
       player.axis = axis;
       return this;
     },
+
     kill: function () {
       var player = this;
       if (player.killed) {
         return player;
       }
       player.killed = new Date();
-      console.log((player + " is dead").toUpperCase());
+      console.log((player + " has died").toUpperCase());
       player.unBoost();
       player.speed = 0;
       return this;
     },
+
     boost: function () {
       var player = this;
       if (player.power.boost || player.killed) {
@@ -96,10 +85,11 @@
           return;
         }
         player.unBoost();
-      }, 3000);
+      }, 1000);
 
       return this;
     },
+
     unBoost: function () {
       var player = this;
       clearInterval(player.power.boost);
@@ -107,18 +97,46 @@
       player.speed = player.original.speed;
       player.power.boost = null;
       return this;
+    },
+
+    trail: function () {
+      var player = this,
+        lastEntry = player.history[player.history.length - 1],
+        captureDistance = (player.speed * 2) * player.direction,
+        perpendicular = player.axis === 'x' ? 'y' : 'x',
+        range = Math.abs(lastEntry[player.axis] - player[player.axis]),
+        line = {
+          offset: player[perpendicular],
+          owner: player,
+          start: 0,
+          end: player[player.axis]
+        };
+
+      if (range < captureDistance) {
+        line.start = lastEntry[player.axis];
+      } else {
+        line.start = player[player.axis] - captureDistance;
+      }
+      return line;
     }
   };
 
-  var $ = function (s, e) {
-      return (e || document).querySelector(s);
+
+
+
+  var $ = function (s) {
+      return document.querySelector(s);
     },
     canvas = $('canvas'),
     ctx = canvas.getContext('2d'),
     model,
     view,
     controller,
+    currentPlayer,
     stopped = false;
+
+
+
 
   view = {
     color: {
@@ -168,13 +186,16 @@
     }
   };
 
+
+
+
   model = {
     players: [],
     movePlayers: function () {
       if (stopped) {
         return;
       }
-      model.testForCollisions();
+      model.killCollided();
       model.players.forEach(function (player) {
         player.move();
       });
@@ -190,7 +211,7 @@
         if (end.axis !== axis) {
           return;
         }
-        var opposite = (axis === 'x') ? 'y' : 'x',
+        var perpendicular = (axis === 'x') ? 'y' : 'x',
           intermediate;
         if (start[axis] > end[axis]) {
           intermediate = start;
@@ -200,7 +221,7 @@
         lines.push({
           start: start[axis],
           end: end[axis],
-          offset: end[opposite],
+          offset: end[perpendicular],
           owner: player
         });
       }
@@ -216,6 +237,8 @@
           addLines(start, end, player);
         }
         // Include the current trajectory
+        // THIS MAY BE THE CAUSE
+        // Start and end are getting out of order on the current player
         addLines(lastTurn, {
           x: player.x,
           y: player.y,
@@ -225,43 +248,59 @@
       });
       return lines;
     },
-    testForCollisions: function () {
-      var lines = {
-        x: model.findLines('x'),
-        y: model.findLines('y')
-      };
+    killCollided: function () {
+      var player = model.players[1],
+        perpendicular = player.axis === 'x' ? 'y' : 'x',
+        lastEntry = player.history[player.history.length - 1],
+        walls = model.findLines(perpendicular),
+        collision;
 
-      model.players.forEach(function (player) {
-        if (player.killed) {
-          return this;
+      if (player.killed) {
+        return this;
+      }
+
+      function alive(line) {
+        if (line.owner.killed) {
+          return false;
         }
-        //      if (player.y === 199) {
-        //        debugger;
-        //      }
-        var perpendicular = player.axis === 'x' ? 'y' : 'x',
-          lastEntry = player.history.length - 1,
-          collision = lines[perpendicular].filter(function (line) {
-            if (line.owner.killed) {
-              return false;
-            }
-            var isAfterBeginning = line.start < player[perpendicular],
-              isBeforeEnd = line.end > player[perpendicular],
-              isInWay = isAfterBeginning && isBeforeEnd,
+        return true;
+      }
 
-              trajectoryBeginsBeforeLine = player.history[lastEntry][player.axis] < line.offset,
-              trajectoryEndsAfterLine = player[player.axis] > line.offset,
-              isOverlapping = trajectoryBeginsBeforeLine && trajectoryEndsAfterLine;
-
-            return isInWay && isOverlapping;
-          });
-
-        if (collision.length !== 0) {
-          player.kill();
+      function inPath(line) {
+        if (line.start < player[perpendicular] &&
+            line.end > player[perpendicular]) {
+          return true;
         }
-      });
+        return false;
+      }
+
+      function overlapping(line) {
+        var trail = player.trail();
+        if (line.offset >= trail.start &&
+            line.offset <= trail.end) {
+          return true;
+        }
+        if (line.offset <= trail.start &&
+            line.offset >= trail.end) {
+          return true;
+        }
+        return false;
+      }
+
+      collision = walls
+        .filter(alive)
+        .filter(inPath)
+        .filter(overlapping)
+        .length;
+
+      if (collision) {
+        player.kill();
+      }
       return this;
     }
   };
+
+
 
 
   controller = {
@@ -269,7 +308,7 @@
       view.resizeCanvas();
       controller.setPlayers();
       model.movePlayers();
-      window.addEventListener('resize', view.resizeCanvas);
+      //    window.addEventListener('resize', view.resizeCanvas);
       document.body.addEventListener('keydown', controller.gameInput);
       return this;
     },
@@ -280,7 +319,7 @@
       return this;
     },
     gameInput: function (e) {
-      var player = model.players[3],
+      var player = model.players[1],
         arrow,
         axis;
       if (e.keyCode === 0) {
