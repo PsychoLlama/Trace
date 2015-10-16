@@ -23,11 +23,14 @@
     player.power = {
       boost: null
     };
-    player.history = [{
-      x: config.x,
-      y: config.y,
-      axis: config.axis
-    }];
+    // Must communicate across connected peers
+    player.history = [
+      {
+        x: config.x,
+        y: config.y,
+        axis: config.axis
+      }
+    ];
   }
 
   Player.prototype = {
@@ -76,14 +79,32 @@
       if (player.killed) {
         return player;
       }
-      // TODO: give more UX feedback
-      // maybe a flashing path
       player.killed = new Date();
       console.log((player + " has died").toUpperCase());
       player.unBoost();
-      player.color = 'transparent';
+      player.blink('transparent');
       player.speed = 0;
       return this;
+    },
+    blink: function (color) {
+      var player = this,
+        black,
+        clear;
+      player.color = color;
+      clear = setInterval(function () {
+        player.color = color;
+      }, 100);
+      setTimeout(function () {
+        player.color = 'black';
+        black = setInterval(function () {
+          player.color = 'black';
+        }, 100);
+      }, 50);
+      setTimeout(function () {
+        clearInterval(clear);
+        clearInterval(black);
+        player.color = color;
+      }, 300);
     },
 
     boost: function () {
@@ -159,7 +180,7 @@
   view = {
     color: {
       background: '#f0f0f0',
-      player: ['green', 'blue', 'red', 'orange']
+      player: ['green', 'blue', 'red', 'orange', 'purple']
     },
     render: function () {
       view.clear().drawWalls().drawWalls().drawWalls();
@@ -365,9 +386,6 @@
       listen(window, 'resize').then(function () {
         view.resizeCanvas().render();
       });
-      listen('dblclick').then(function () {
-        model.player.boost();
-      });
       listen('touchstart').then(controller.swipeInput);
       listen('touchmove').then(controller.swipeMove);
       listen('keydown').then(controller.gameInput);
@@ -375,15 +393,16 @@
     },
     getPlayers: function () {
       model.players = view.color.player.map(function (color, i) {
+        var padding = canvas.width / view.color.player.length;
         return new Player({
           color: color,
-          x: (++i * 200) + 75,
+          x: (++i * padding - padding / 2),
           y: canvas.height / 100 * 5,
           axis: 'y',
           direction: 1
         });
       });
-      model.player = model.players[1];
+      model.player = model.players[2];
       return this;
     },
     gameInput: function (e) {
