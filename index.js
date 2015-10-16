@@ -1,8 +1,21 @@
-/*globals console, requestAnimationFrame */
+/*globals console, requestAnimationFrame, prompt */
 /*jslint plusplus: true */
 
 (function () {
   'use strict';
+
+  var $ = function (s) {
+      return document.querySelector(s);
+    },
+    canvas = $('canvas'),
+    ctx = canvas.getContext('2d'),
+    yDown = null,
+    xDown = null,
+    model,
+    view,
+    controller,
+    currentPlayer,
+    stopped = false;
 
   function Player(config) {
     var player = this;
@@ -11,7 +24,7 @@
     player.x = config.x;
     player.y = config.y;
     player.width = 5;
-    player.color = config.color;
+    player.color = config.color || '#505050';
     player.speed = 3;
     player.direction = config.direction;
     player.axis = config.axis;
@@ -82,14 +95,19 @@
       player.killed = new Date();
       console.log((player + " has died").toUpperCase());
       player.unBoost();
-      player.blink('transparent');
+      player.blink('transparent').then(function () {
+        var newPlayer = controller.setupPlayer();
+        model.players.push(newPlayer);
+        return (model.player = newPlayer);
+      });
       player.speed = 0;
       return this;
     },
     blink: function (color) {
       var player = this,
         black,
-        clear;
+        clear,
+        callbacks = [];
       player.color = color;
       clear = setInterval(function () {
         player.color = color;
@@ -104,7 +122,15 @@
         clearInterval(clear);
         clearInterval(black);
         player.color = color;
+        callbacks.forEach(function (cb) {
+          cb(player);
+        });
       }, 300);
+      return {
+        then: function (cb) {
+          callbacks.push(cb);
+        }
+      };
     },
 
     boost: function () {
@@ -161,18 +187,6 @@
 
 
 
-  var $ = function (s) {
-      return document.querySelector(s);
-    },
-    canvas = $('canvas'),
-    ctx = canvas.getContext('2d'),
-    yDown = null,
-    xDown = null,
-    model,
-    view,
-    controller,
-    currentPlayer,
-    stopped = false;
 
 
 
@@ -194,7 +208,7 @@
       ctx.fill();
       return this;
     },
-    resizeCanvas: function () {
+    resize: function () {
       var width = window.innerWidth,
         height = window.innerHeight;
 
@@ -291,8 +305,6 @@
           addLines(start, end, player);
         }
         // Include the current trajectory
-        // THIS MAY BE THE CAUSE
-        // Start and end are getting out of order on the current player
         addLines(lastTurn, {
           x: player.x,
           y: player.y,
@@ -360,6 +372,8 @@
 
 
 
+
+
   function listen(target, type) {
     var call = {
       then: function (callback) {
@@ -376,33 +390,44 @@
 
   controller = {
     init: function () {
-
+      var player;
       canvas.width = 1200;
       canvas.height = 1200;
-
-      view.resizeCanvas().render();
+      view.resize().render();
+      player = controller.setupPlayer();
       controller.getPlayers();
+      model.players.push(player);
+      model.player = player;
       model.movePlayers();
       listen(window, 'resize').then(function () {
-        view.resizeCanvas().render();
+        view.resize().render();
       });
       listen('touchstart').then(controller.swipeInput);
       listen('touchmove').then(controller.swipeMove);
       listen('keydown').then(controller.gameInput);
       return this;
     },
-    getPlayers: function () {
-      model.players = view.color.player.map(function (color, i) {
-        var padding = canvas.width / view.color.player.length;
-        return new Player({
-          color: color,
-          x: (++i * padding - padding / 2),
-          y: canvas.height / 100 * 5,
-          axis: 'y',
-          direction: 1
-        });
+    setupPlayer: function (x, y, color) {
+      return new Player({
+        x: x || 150,
+        y: y || 300,
+        axis: 'y',
+        direction: 1,
+        name: localStorage.name || (localStorage.name = prompt("What's your name?")),
+        color: color || view.color.player[model.players.length]
       });
-      model.player = model.players[2];
+    },
+    getPlayers: function () {
+      var newPlayers = view.color.player.map(function (color, i) {
+        var padding = canvas.width / view.color.player.length,
+          x = ++i * padding - padding / 2,
+          y = canvas.height / 100 * 5;
+        return controller.setupPlayer(x, y, color);
+      }).filter(function (player) {
+        return !!player;
+      });
+      model.players = model.players.concat(newPlayers);
+      model.player = model.players[model.players.length - 1];
       return this;
     },
     gameInput: function (e) {
