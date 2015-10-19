@@ -37,12 +37,13 @@ function turn(data) {
       if (Type instanceof Function) {
         Type = new Type();
       }
-      return Type;
+      return this.merge(Type);
     },
     merge: function (target) {
       Object.keys(data).forEach(function (key) {
         Type[key] = data[key];
       });
+      return
     }
   };
 }
@@ -50,7 +51,7 @@ function turn(data) {
 
 
 
-gun = new Gun('http://192.168.1.104:8081/gun')
+gun = new Gun('https://gungame.herokuapp.com/gun')
   .get('example/games/trace').set().put({
     1: {
       num: 1
@@ -79,17 +80,21 @@ function Player(coord) {
   player.width = 5;
   player.color = view.color.player[model.playerNum];
   player.speed = 0.15;
-  player.direction = 1;
+  player.direction = coord.direction || 1;
   player.axis = coord.axis || 'y';
-  player.killed = false;
+  player.killed = coord.killed || false;
+  player.taken = coord.taken || false;
+  player.time = coord.time || Gun.time.now();
   player.last = {
     x: player.x,
-    y: player.y
+    y: player.y,
+    time: player.time
   };
   player.original = {
     color: player.color
   };
-  player.history = [];
+  player.history = coord.history || {};
+  player.history[0] = (coord.history || {})[0] || player.last;
 }
 
 Player.prototype = {
@@ -97,7 +102,6 @@ Player.prototype = {
   toString: function () {
     return (this.name || this.original.color + " Player");
   },
-
   move: function () {
     var player = this,
       distance = player.getDistance();
@@ -133,7 +137,7 @@ Player.prototype = {
       return this;
     }
     entry = {
-      time: new Date().getTime(),
+      time: Gun.time.now(),
       axis: player.axis,
       x: player.x,
       y: player.y
@@ -153,7 +157,7 @@ Player.prototype = {
     }
     player.killed = new Date();
     player.history.push({
-      time: new Date().getTime(),
+      time: Gun.time.now(),
       x: player.x,
       y: player.y
     });
@@ -211,8 +215,8 @@ Player.prototype = {
   },
 
   getDistance: function () {
-    var entry = this.history[this.history.length - 1],
-      now = new Date().getTime(),
+    var entry = this.history[0], // TODO: THIS SHOULD NOT BE HARD CODED!
+      now = Gun.time.now(),
       lastTime = entry.time,
       elapsed = now - lastTime,
       distance = this.speed * elapsed,
@@ -237,7 +241,8 @@ view = {
 
   render: function () {
     view.clear().drawWalls().drawWalls().drawWalls();
-    model.players.map(view.drawPlayer);
+    //model.players.map(view.drawPlayer);
+    Gun.obj.map(model.gunPlayers, view.drawPlayer);
     return this;
   },
 
@@ -281,15 +286,16 @@ view = {
   },
 
   drawWalls: function () {
-    model.players.map(function (player, i) {
-      if (!player.history.length) {
+    Gun.obj.map(model.gunPlayers, function (player, i) {
+      //model.players.map(function (player, i) {
+      if (!player.history) {
         return;
       }
       ctx.beginPath();
       ctx.strokeWidth = 1;
       ctx.strokeStyle = player.color;
       ctx.moveTo(player.history[0].x, player.history[0].y);
-      player.history.map(function (coord) {
+      Gun.obj.map(player.history, function (coord) {
         ctx.lineTo(coord.x, coord.y);
       });
       ctx.lineTo(player.x, player.y);
@@ -315,9 +321,11 @@ model = {
     if (stopped) {
       return;
     }
-    model.players.forEach(function (player) {
-      if (player.history.length) {
-        player.move();
+    Gun.obj.map(model.gunPlayers, function (player) {
+      //console.log("gun players:", player);
+      if (true || player.history.length) {
+        var p = new Player(player);
+        p.move();
       }
     });
     model.killCollided();
@@ -456,12 +464,13 @@ model = {
     model.players[index] = player;
     model.player = model.players[index];
 
-    return model.emit({
+    model.emit({
       x: player.x,
       y: player.y,
       axis: player.axis,
       time: Gun.time.now()
     });
+    return model.player;
   }
 };
 
@@ -489,10 +498,16 @@ controller = {
       if (!model.me.taken && !player.taken) {
         model.me = this;
         model.me.taken = true;
+        var p = model.joinGame(num);
         model.me.put({
-          taken: true
+          x: p.x,
+          y: p.y,
+          direction: p.direction,
+          axis: p.axis,
+          killed: p.killed,
+          taken: true,
+          time: Gun.time.now()
         });
-        model.joinGame(num);
       }
       if (model.playerNum != num && !model.players[num] && player.taken) {
         console.log("New player as joined the game!", player);
