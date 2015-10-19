@@ -1,7 +1,7 @@
 /*globals console, requestAnimationFrame, prompt, Gun */
 /*jslint plusplus: true */
 
-(function () {
+//(function () {
   'use strict';
 
 
@@ -37,10 +37,12 @@
         if (Type instanceof Function) {
           Type = new Type();
         }
+        return Type;
+      },
+      merge: function (target) {
         Object.keys(data).forEach(function (key) {
           Type[key] = data[key];
         });
-        return Type;
       }
     };
   }
@@ -48,8 +50,8 @@
 
 
 
-  gun = new Gun('http://localhost:8081/gun')
-    .get('example/games/trace');
+  gun = new Gun('http://192.168.1.104:8081/gun')
+    .get('example/games/trace').set();
 
 
   //stopped = true;
@@ -62,7 +64,7 @@
     player.x = coord.x || 100;
     player.y = coord.y || 100;
     player.width = 5;
-    player.color = '#505050';
+    player.color = view.color.player[model.playerNum];
     player.speed = 0.15;
     player.direction = 1;
     player.axis = coord.axis || 'y';
@@ -72,9 +74,9 @@
       y: player.y
     };
     player.original = {
-      color: player.color,
-      speed: player.speed
+      color: player.color
     };
+    player.history = [];
   }
 
   Player.prototype = {
@@ -84,7 +86,6 @@
     },
 
     move: function () {
-      //    debugger;
       var player = this,
         distance = player.getDistance();
       player.last[player.axis] = player[player.axis];
@@ -94,7 +95,7 @@
 
     turn: function (axis, direction) {
       var player = this,
-        turn;
+        entry;
       if (player.killed) {
         return;
       }
@@ -115,16 +116,15 @@
       if (player.axis === axis) {
         return this;
       }
-      turn = {
+      entry = {
         time: new Date().getTime(),
         axis: player.axis,
         x: player.x,
         y: player.y
       };
-      player.history.push(turn);
-      player.emit(turn);
-      player.last.x = null;
-      player.last.y = null;
+      model.emit(entry);
+      player.last.x = player.x;
+      player.last.y = player.y;
       player.direction = direction;
       player.axis = axis;
       return this;
@@ -142,20 +142,10 @@
         y: player.y
       });
       console.log((player + " has died").toUpperCase());
-      player
-        .blink('transparent')
-        .then(controller.replacePlayer);
+      player.blink('transparent').then(function () {
+        model.joinGame(model.playerNum);
+      });
       player.speed = 0;
-      player.erase();
-      return this;
-    },
-
-    erase: function () {
-      var player = this,
-        num = model.playerNum(player),
-        nullify = {};
-      nullify[num] = null;
-      gun.put(nullify);
       return this;
     },
 
@@ -211,20 +201,7 @@
         elapsed = now - lastTime,
         distance = this.speed * elapsed,
         step = entry[this.axis] + (distance * this.direction);
-      if (isNaN(step)) {
-        return this.last[this.axis];
-      }
       return step;
-    },
-
-    emit: function (entry) {
-      var player = model.playerNum(model.player),
-        last = this.history.length - 1,
-        log = {};
-      log[last] = entry;
-
-      gun.path(String(player)).path('history').put(log);
-      return this;
     }
   };
 
@@ -234,16 +211,20 @@
 
 
 
+  // View is beatifully self contained.
+  // No refactoring needed here
   view = {
     color: {
       background: '#f0f0f0',
       player: ['green', 'blue', 'red', 'purple']
     },
+
     render: function () {
       view.clear().drawWalls().drawWalls().drawWalls();
       model.players.map(view.drawPlayer);
       return this;
     },
+
     clear: function () {
       ctx.beginPath();
       ctx.rect(0, 0, canvas.width, canvas.height);
@@ -251,6 +232,7 @@
       ctx.fill();
       return this;
     },
+
     resize: function () {
       var width = window.innerWidth,
         height = window.innerHeight;
@@ -272,6 +254,7 @@
       }
       return this;
     },
+
     drawPlayer: function (player) {
       var offset = player.width / 2;
       ctx.beginPath();
@@ -280,8 +263,12 @@
       ctx.fill();
       return this;
     },
+
     drawWalls: function () {
       model.players.map(function (player, i) {
+        if (!player.history.length) {
+          return;
+        }
         ctx.beginPath();
         ctx.strokeWidth = 1;
         ctx.strokeStyle = player.color;
@@ -301,30 +288,26 @@
 
 
   model = {
-    me: Math.random().toString(36).split('.')[1],
     players: [],
+    gunPlayers: {},
+    playerNum: NaN,
     movePlayers: function () {
+
+      // MAIN LOOP
+
       if (stopped) {
         return;
       }
-      model.killCollided();
       model.players.forEach(function (player) {
-        player.move();
+        if (player.history.length) {
+          player.move();
+        }
       });
+      model.killCollided();
 
       view.render();
       requestAnimationFrame(model.movePlayers);
       return this;
-    },
-
-    playerNum: function (query) {
-      var num = null;
-      model.players.forEach(function (player, i) {
-        if (player === query) {
-          num = i;
-        }
-      });
-      return num;
     },
 
     findLines: function (axis) {
@@ -427,6 +410,37 @@
         player.kill();
       }
       return this;
+    },
+
+    emit: function (entry) {
+      // Find current player
+      // Push out an update based on it
+      var submission = {},
+        player = model.playerNum,
+        logs = model.players[player].history,
+        entryNum = logs.length;
+
+      submission[player] = {};
+      submission[player][entryNum] = entry;
+      gun.put(submission);
+      return this;
+    },
+
+    joinGame: function (index) {
+      model.playerNum = index;
+
+      var coord = controller.findOpenPosition(),
+        player = new Player(coord);
+
+      model.players[index] = player;
+      model.player = model.players[index];
+
+      return model.emit({
+        x: player.x,
+        y: player.y,
+        axis: player.axis,
+        time: new Date().getTime()
+      });
     }
   };
 
@@ -448,31 +462,14 @@
 
   controller = {
     init: function () {
+      gun.synchronous(model.gunPlayers);
       canvas.width = 1200;
       canvas.height = 1200;
-      view
-        .resize()
-        .render();
-      controller
-        .getPlayers()
-        .checkQueue()
-        .listen();
+      view.resize().render();
+      controller.getPlayers().listen();
 
       // rendering loop
       model.movePlayers();
-      return this;
-    },
-
-    checkQueue: function () {
-      var i,
-        player;
-      // for each player
-      for (i = 0; i < 4; i++) {
-        player = model.players[i];
-        if (!player || player.killed) {
-          controller.replacePlayer(i);
-        }
-      }
       return this;
     },
 
@@ -486,75 +483,24 @@
       return this;
     },
 
-    setupPlayer: function (index) {
-      function getName() {
-        var name = prompt("What's your name?");
-        localStorage.name = name;
-        return name;
-      }
-      var color = view.color.player[index],
-        coord = controller.findOpenPosition(),
-        player = turn({
-          direction: 1,
-          name: localStorage.name || getName(),
-          color: color,
-          history: [{
-            time: new Date().getTime(),
-            axis: coord.axis,
-            x: coord.x,
-            y: coord.y
-          }]
-        }).into(new Player(coord));
-      return player;
-    },
-
     getPlayers: function () {
-      gun.map(function (player, index) {
-        if (!player) {
-          return;
-        }
-        // each player
-        var ref = this;
-        player.history = [];
 
-        // Reconstruct the player
-        ref.path('last', function (err, entry) {
-          player.last = entry;
-          ref.path('original', function (err, original) {
-            player.original = original;
-            ref.path('history').map(function (entry, i) {
-              player.history[i] = entry;
-              player = turn(player).into(Player);
-              model.player = player;
-              model.players[index] = player;
-            });
-          });
+      gun.map(function (player, index) {
+        // NOTE: val only executes once
+        // we'll need to figure out when a player dies
+        // each player
+        if (player === null) {
+          // someone died
+          model.players[index] = new Player(controller.findOpenPosition());
+        }
+        // get all the history entries
+        this.map(function (entry, i) {
+//          console.log('Player', model.playerNum, 'has been updated to', entry);
+          model.players[index].history[0] = entry;
         });
       });
+
       return this;
-    },
-
-    replacePlayer: function (index) {
-      index = (index.constructor === Number) ? index : model.playerNum(index);
-      var player = controller.setupPlayer(index);
-
-      // Que system?
-
-      model.players[index] = player;
-      model.player = player;
-      controller.exportPlayer(player);
-      return this;
-    },
-
-    exportPlayer: function (player) {
-      // Copy, mutate and export player
-      var index = model.playerNum(player),
-        playerCopy = turn(player).into(Player);
-      if (index === null) {
-        return;
-      }
-      playerCopy.history = turn(playerCopy.history).into(Object);
-      gun.path(String(index)).put(playerCopy);
     },
 
     findOpenPosition: function () {
@@ -564,6 +510,7 @@
         axis: 'y'
       };
     },
+
     gameInput: function (e) {
       var player = model.player,
         arrow,
@@ -622,4 +569,4 @@
   };
 
   controller.init();
-}());
+//}());
