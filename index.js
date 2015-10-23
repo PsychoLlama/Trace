@@ -1,4 +1,4 @@
-/*globals console, requestAnimationFrame, prompt, Gun */
+/*globals console, requestAnimationFrame, prompt, alert, Gun */
 /*jslint plusplus: true */
 
 //(function () {
@@ -26,7 +26,7 @@ Object.defineProperties(window, {
   'p': {
     get: function () {
       stopped = false;
-      return model.movePlayers();
+      return view.loop();
     }
   }
 });
@@ -37,22 +37,19 @@ function turn(data) {
       if (Type instanceof Function) {
         Type = new Type();
       }
-      return this.merge(Type);
-    },
-    merge: function (target) {
       Object.keys(data).forEach(function (key) {
         Type[key] = data[key];
       });
-      return
+      return Type;
     }
   };
 }
 
-
-
-
-gun = new Gun('https://gungame.herokuapp.com/gun')
-  .get('example/games/trace').set().put({
+localStorage.clear();
+gun = new Gun(/*'https://gungame.herokuapp.com/gun'*/)
+  .get('example/games/trace')
+  .set()
+  .put({
     1: {
       num: 1
     },
@@ -67,92 +64,97 @@ gun = new Gun('https://gungame.herokuapp.com/gun')
     }
   });
 
+function Player(player) {
+  player = player || {};
 
-//stopped = true;
+  // these are weird
+//  player.x = player.x;
+//  player.y = player.y;
+  player.width = player.width || 5;
+  player.color = player.color || view.color.player[model.num];
+  player.speed = player.speed || 0.15;
+  player.direction = player.direction || 1;
+  player.axis = player.axis || 'y';
+  player.killed = player.killed || false;
+  player.taken = player.taken || false;
+  player.turns = player.turns || 0;
 
+//  if (player.history) {
+    // THIS LINE IS THE DEVIL
+    // IT IS THE THING THAT MAKES ALL UNDEFINED OFFENSES POSSIBLE
+    // player.prev = player.history[player.turns];
+//  }
 
-function Player(coord) {
-  coord = coord || {};
-  var player = this;
-
-  player.x = coord.x || 100;
-  player.y = coord.y || 100;
-  player.width = 5;
-  player.color = view.color.player[model.playerNum];
-  player.speed = 0.15;
-  player.direction = coord.direction || 1;
-  player.axis = coord.axis || 'y';
-  player.killed = coord.killed || false;
-  player.taken = coord.taken || false;
-  player.time = coord.time || Gun.time.now();
   player.last = {
-    x: player.x,
-    y: player.y,
-    time: player.time
+    x: null,
+    y: null
   };
-  player.original = {
-    color: player.color
-  };
-  player.history = coord.history || {};
-  player.history[0] = (coord.history || {})[0] || player.last;
-}
 
-Player.prototype = {
-  constructor: Player,
-  toString: function () {
-    return (this.name || this.original.color + " Player");
-  },
-  move: function () {
-    var player = this,
-      distance = player.getDistance();
-    player.last[player.axis] = player[player.axis];
+  var api = {};
+  api.move = function () {
+    var prev,
+      distance;
+    if (!player.history) {
+      return api;
+    }
+    prev = player.history[player.turns];
+    if (!prev || Gun.obj.empty(prev)) {
+      return api;
+    }
+    distance = api.getDistance(prev, player.axis);
+
+    // player.last = Gun.obj.copy(player.last);
+    api.snapshot(player.last, player);
+
     player[player.axis] = distance;
-    return this;
-  },
+    return api;
+  };
 
-  turn: function (axis, direction) {
-    if (!model.me.taken) {
-      return this
+  api.snapshot = function (historical, operating) {
+    historical.x = operating.x;
+    historical.y = operating.y;
+    return api;
+  };
+
+  api.turn = function (axis, direction) {
+    var entry;
+    if (!model.gun || !model.num || player.killed || player.axis === axis) {
+      return api;
     }
-    var player = this,
-      entry;
-    if (player.killed) {
-      return;
-    }
-    if (axis.length !== 1) {
-      switch (axis.toLowerCase()) {
+    if (!direction) {
+      switch (axis) {
       case 'up':
-        return player.turn('y', -1);
+        return api.turn('y', -1);
       case 'down':
-        return player.turn('y', 1);
+        return api.turn('y', 1);
       case 'left':
-        return player.turn('x', -1);
+        return api.turn('x', -1);
       case 'right':
-        return player.turn('x', 1);
+        return api.turn('x', 1);
       default:
-        return this;
+        return api;
       }
     }
-    if (player.axis === axis) {
-      return this;
-    }
-    entry = {
+    model.turns += 1;
+
+    // add an entry to history
+    entry = model.makeEntry({
       time: Gun.time.now(),
-      axis: player.axis,
+      axis: player.axis = axis,
+      direction: player.direction = direction,
       x: player.x,
       y: player.y
-    };
-    model.emit(entry);
-    player.last.x = player.x;
-    player.last.y = player.y;
-    player.direction = direction;
-    player.axis = axis;
-    return this;
-  },
+    });
 
-  kill: function () {
-    var player = this;
-    if (player.killed) {
+    // So it's not recording the first turn because undefined is an
+    // invalid value. An x or y is not set.
+    model.gun.put(entry);
+
+    return api;
+  };
+
+  api.kill = function () {
+    if (!player.history || player.killed) {
       return player;
     }
     player.killed = new Date();
@@ -163,15 +165,14 @@ Player.prototype = {
     });
     console.log((player + " has died").toUpperCase());
     player.blink('transparent').then(function () {
-      model.joinGame(model.playerNum);
+      model.joinGame(model.num);
     });
     player.speed = 0;
-    return this;
-  },
+    return api;
+  };
 
-  blink: function (color) {
-    var player = this,
-      callbacks = [],
+  api.blink = function (color) {
+    var callbacks = [],
       black,
       clear = setInterval(function () {
         player.color = color;
@@ -198,11 +199,13 @@ Player.prototype = {
         return this;
       }
     };
-  },
+  };
 
-  trail: function () {
-    var player = this,
-      lastTurn = player.history[player.history.length - 1],
+  api.trail = function () {
+    if (!player.history) {
+      return;
+    }
+    var lastTurn = player.history[player.history.length - 1],
       axis = player.axis,
       perpendicular = axis === 'x' ? 'y' : 'x';
 
@@ -212,18 +215,24 @@ Player.prototype = {
       start: player.last[axis] || lastTurn[axis],
       end: player[axis]
     };
-  },
+  };
 
-  getDistance: function () {
-    var entry = this.history[0], // TODO: THIS SHOULD NOT BE HARD CODED!
-      now = Gun.time.now(),
-      lastTime = entry.time,
-      elapsed = now - lastTime,
-      distance = this.speed * elapsed,
-      step = entry[this.axis] + (distance * this.direction);
+  api.getDistance = function (prev, axis) {
+    if (prev.x === undefined || prev.y === undefined) {
+      console.log('prev', prev);
+      alert("YOU'RE LOSING THE GAME");
+      return 150;
+    }
+
+    var now = Gun.time.now(),
+      elapsed = now - prev.time,
+      distance = player.speed * elapsed,
+      step = prev[player.axis] + (distance * player.direction);
     return step;
-  }
-};
+  };
+
+  return api;
+}
 
 
 
@@ -233,17 +242,31 @@ Player.prototype = {
 
 // View is beatifully self contained.
 // No refactoring needed here
+
 view = {
   color: {
     background: '#f0f0f0',
     player: ['green', 'blue', 'red', 'purple']
   },
+  loop: function () {
+    // RENDERING LOOP
 
+    if (stopped) {
+      return;
+    }
+    model.movePlayers();
+    view.render();
+    requestAnimationFrame(view.loop);
+
+    return view;
+  },
   render: function () {
-    view.clear().drawWalls().drawWalls().drawWalls();
-    //model.players.map(view.drawPlayer);
-    Gun.obj.map(model.gunPlayers, view.drawPlayer);
-    return this;
+    // player trails
+    view.clear().drawWalls();
+
+    // player head
+    Gun.obj.map(model.players, view.drawPlayer);
+    return view;
   },
 
   clear: function () {
@@ -251,7 +274,7 @@ view = {
     ctx.rect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = view.color.background;
     ctx.fill();
-    return this;
+    return view;
   },
 
   resize: function () {
@@ -273,36 +296,45 @@ view = {
       canvas.style.width = height + "px";
       canvas.style.height = height + "px";
     }
-    return this;
+    return view;
   },
 
   drawPlayer: function (player) {
-    var offset = player.width / 2;
+    var width, offset, color;
+    width = player.width || 5;
+    offset = width / 2;
+    color = player.color || view.color.player[(player.num - 1) || 0];
     ctx.beginPath();
-    ctx.rect(player.x - offset, player.y - offset, player.width, player.width);
-    ctx.fillStyle = player.color;
+    ctx.rect(player.x - offset, player.y - offset, width, width);
+    ctx.fillStyle = color;
     ctx.fill();
-    return this;
+    return view;
   },
 
   drawWalls: function () {
-    Gun.obj.map(model.gunPlayers, function (player, i) {
-      //model.players.map(function (player, i) {
-      if (!player.history) {
-        return;
+    // BEAUTIFUL FUNCTION
+    Gun.obj.map(model.players, function (player, i) {
+      if (!player.history || !player.history[0]) {
+        return view;
       }
       ctx.beginPath();
       ctx.strokeWidth = 1;
       ctx.strokeStyle = player.color;
       ctx.moveTo(player.history[0].x, player.history[0].y);
+
+      // Objects aren't sorted.
+      // This has a potential to fall out of order.
       Gun.obj.map(player.history, function (coord) {
+        if (!coord) {
+          return view;
+        }
         ctx.lineTo(coord.x, coord.y);
       });
       ctx.lineTo(player.x, player.y);
       ctx.stroke();
       ctx.closePath();
     });
-    return this;
+    return view;
   }
 };
 
@@ -310,29 +342,21 @@ view = {
 
 
 model = {
-  players: [],
-  me: {},
-  gunPlayers: {},
-  playerNum: NaN,
+  waiting: true,
+  players: {},
+  num: null,
+  turns: null,
   movePlayers: function () {
 
-    // MAIN LOOP
-
-    if (stopped) {
-      return;
-    }
-    Gun.obj.map(model.gunPlayers, function (player) {
-      //console.log("gun players:", player);
-      if (true || player.history.length) {
-        var p = new Player(player);
-        p.move();
+    Gun.obj.map(model.players, function (player) {
+      if (player.history && player.history[0]) {
+        Player(player).move();
       }
     });
-    model.killCollided();
 
-    view.render();
-    requestAnimationFrame(model.movePlayers);
-    return this;
+    //model.killCollided();
+
+    return model;
   },
 
   findLines: function (axis) {
@@ -387,16 +411,16 @@ model = {
     }
     var player = model.player,
       outOfBounds = player.x < 0 ||
-      player.x > canvas.width ||
-      player.y < 0 ||
-      player.y > canvas.height,
+        player.x > canvas.width ||
+        player.y < 0 ||
+        player.y > canvas.height,
       perpendicular = player.axis === 'x' ? 'y' : 'x',
       lastEntry = player.history[player.history.length - 1],
       walls = model.findLines(perpendicular),
       collision;
 
     if (player.killed) {
-      return this;
+      return model;
     }
 
     function alive(line) {
@@ -408,7 +432,7 @@ model = {
 
     function inPath(line) {
       if (line.start < player[perpendicular] &&
-        line.end > player[perpendicular]) {
+          line.end > player[perpendicular]) {
         return true;
       }
       return false;
@@ -434,139 +458,149 @@ model = {
     if (collision || outOfBounds) {
       player.kill();
     }
-    return this;
+    return model;
   },
 
-  emit: function (entry) {
-    if (!model.me.taken) return;
-    // Find current player
-    // Push out an update based on it
-    var submission = {
-        history: {}
+  makeEntry: function (entry) {
+    return {
+      turns: model.turns,
+      history: {
+//        [model.turns]: entry
+      }
+    };
+  },
+
+  join: function (player) {
+    var coord, entry;
+    if (!model.waiting || player.taken) {
+      return model;
+    }
+    // if we've made it this far,
+    // we can take a player
+
+    // potential race conditions!
+    // possess the player
+    model.waiting = false;
+    model.num = player.num;
+    model.turns = 0;
+    model.gun = gun.path(model.num);
+
+    /*
+    model.gun.put({
+      history: null,
+      turns: model.turns
+    });*/ //, function() {
+    coord = controller.findOpenPosition();
+    entry = {
+      history: {
+        0: coord
       },
-      player = model.playerNum,
-      logs = model.players[player].history,
-      entryNum = logs.length;
+      killed: false,
+      taken: true,
+      turns: model.turns,
+      num: model.num
+    };
 
-    //submission[player] = {};
-    //submission[player][entryNum] = entry;
-    submission.history[0] = entry;
-    model.me.put(submission);
-    return this;
+    model.gun.put(entry, function (err, ok) {
+      console.log("did we start?", err, ok, entry.history);
+      //model.players[model.num].x = coord.x;
+      //model.players[model.num].y = coord.y;
+    });
+    //});
+
+    console.log("You joined the game as player", model.num);
+    return model;
   },
 
-  joinGame: function (index) {
-    model.playerNum = index;
-
-    var coord = controller.findOpenPosition(),
-      player = new Player(coord);
-
-    model.players[index] = player;
-    model.player = model.players[index];
-
-    model.emit({
-      x: player.x,
-      y: player.y,
-      axis: player.axis,
-      time: Gun.time.now()
-    });
-    return model.player;
+  kill: function (player) {
+    if (player.killed) {
+      if (player.num === model.num) {
+        // the player died, give up control
+        model.gun.put({
+          taken: false
+        });
+        model.gun = null;
+        model.num = null;
+        model.turns = null;
+        model.waiting = false; // this forces us to reload to start again.
+      }
+    }
+  },
+  move: function (player) {
+    return model;
   }
 };
 
 
 
-
-
-function listen(target, type) {
-  if (target.constructor === String) {
-    type = target;
-    target = document;
-  }
-  return {
-    then: function (callback) {
-      target.addEventListener(type, callback);
-    }
-  };
-}
-
 controller = {
   init: function () {
-    gun.synchronous(model.gunPlayers).map(function (player, num) {
-      console.log("player update", player);
-      // If there is an open spot
-      if (!model.me.taken && !player.taken) {
-        model.me = this;
-        model.me.taken = true;
-        var p = model.joinGame(num);
-        model.me.put({
-          x: p.x,
-          y: p.y,
-          direction: p.direction,
-          axis: p.axis,
-          killed: p.killed,
-          taken: true,
-          time: Gun.time.now()
-        });
+    gun.synchronous(model.players).map(function (player) {
+      if (player.history) {
+        console.log("yay history!", player.history);
+      } else {
+        console.log('no history');
       }
-      if (model.playerNum != num && !model.players[num] && player.taken) {
-        console.log("New player as joined the game!", player);
-        model.players[num] = new Player(controller.findOpenPosition());
-      }
+
+      // DATA LOOP
+      model.join(player).move(player).kill(player);
+
     });
+
     canvas.width = 1200;
     canvas.height = 1200;
-    view.resize().render();
-    controller.getPlayers().listen();
+    view.resize().loop();
 
-    // rendering loop
-    model.movePlayers();
-    return this;
+    controller.listen();
+
+    return controller;
   },
 
   listen: function () {
+
+    function listen(target, type) {
+      if (target.constructor === String) {
+        type = target;
+        target = document;
+      }
+      return {
+        then: function (callback) {
+          target.addEventListener(type, callback);
+        }
+      };
+    }
+
     listen(window, 'resize').then(function () {
       view.resize().render();
     });
+    listen('keydown').then(controller.gameInput);
+    listen('keyup').then(controller.unlockKey);
     listen('touchstart').then(controller.swipeInput);
     listen('touchmove').then(controller.swipeMove);
-    listen('keydown').then(controller.gameInput);
-    return this;
-  },
-
-  getPlayers: function () {
-    return this;
-    gun.map(function (player, index) {
-      // NOTE: val only executes once
-      // we'll need to figure out when a player dies
-      // each player
-      if (player === null) {
-        // someone died
-        model.players[index] = new Player(controller.findOpenPosition());
-      }
-      // get all the history entries
-      this.map(function (entry, i) {
-        //          console.log('Player', model.playerNum, 'has been updated to', entry);
-        model.players[index].history[0] = entry;
-      });
-    });
-
-    return this;
+    return controller;
   },
 
   findOpenPosition: function () {
     return {
       x: 150,
       y: 300,
-      axis: 'y'
+      axis: 'y',
+      direction: 1,
+      time: Gun.time.now()
     };
   },
 
+  unlockKey: function (e) {
+    model.down = false;
+  },
+
   gameInput: function (e) {
-    var player = model.player,
-      arrow,
-      axis;
-    if (!model.player) {
+    if (model.down) {
+      return;
+    }
+    model.down = true;
+    var player = Player(model.players[model.num]);
+    if (!player) {
       return;
     }
     switch (e.keyCode) {
@@ -576,12 +610,15 @@ controller = {
     case 37:
       return player.turn('left');
     case 68:
+      return p;
     case 39:
       return player.turn('right');
     case 87:
     case 38:
       return player.turn('up');
     case 83:
+      console.log('For your convenience, master', player);
+      return s;
     case 40:
       return player.turn('down');
     }
@@ -598,19 +635,20 @@ controller = {
     var xUp = e.touches[0].clientX,
       yUp = e.touches[0].clientY,
       xDiff = xDown - xUp,
-      yDiff = yDown - yUp;
+      yDiff = yDown - yUp,
+      player = model.players[model.num];
 
     if (Math.abs(xDiff) > Math.abs(yDiff)) {
       if (xDiff > 0) {
-        model.player.turn('left');
+        Player(player).turn('left');
       } else {
-        model.player.turn('right');
+        Player(player).turn('right');
       }
     } else {
       if (yDiff > 0) {
-        model.player.turn('up');
+        Player(player).turn('up');
       } else {
-        model.player.turn('down');
+        Player(player).turn('down');
       }
     }
 

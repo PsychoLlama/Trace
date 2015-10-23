@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Trace | gun</title>
+    <title>GUN TEST</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,
     initial-scale=1, maximum-scale=1, user-scalable=0"/>
@@ -9,14 +9,14 @@
         margin: 0;
         background-color: #202428;
       }
-      canvas {
+      canvas {/*
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
         width: 100vw;
-        height: 100vh;
+        height: 100vh;*/
         box-shadow: 0 0 10px #101418;
       }
     </style>
@@ -26,8 +26,15 @@
     Upgrade for +9000 cool points.
     (psst, Google Chrome is a recommendation)</canvas>
 
-    <script src="http://localhost:8081/gun.js"></script>
-    <script src="http://localhost:8080/synchronous.js"></script>
-    <script src="index.js"></script>
+    <script src="http://localhost:3000/node_modules/gun/gun.js"></script>
+    <script src="http://localhost:3000/hijack.js"></script>
+    <script src="http://localhost:3000/kill.js"></script>
+    <script src="http://localhost:3000/player.js"></script>
+    <script src="http://localhost:3000/canvas.js"></script>
+    <script src="http://localhost:3000/find.js"></script>
+    <script src="http://localhost:3000/render.js"></script>
+    <script src="http://localhost:3000/turn.js"></script>
+    <script src="http://localhost:3000/collision.js"></script>
+    <script src="http://localhost:3000/input.js"></script>
   </body>
 </html>
