@@ -4,7 +4,7 @@ var gun, players;
 (function () {
   'use strict';
 
-  gun = new Gun('http://localhost:8080/gun')
+  gun = new Gun('https://gungame.herokuapp.com/gun')
     .get('players').set()
     .put({
       0: {
