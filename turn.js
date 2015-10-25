@@ -1,5 +1,4 @@
-/*globals players, me, find, gun */
-var turn;
+/*globals players, find, gun, stream */
 
 (function () {
   'use strict';
@@ -7,7 +6,7 @@ var turn;
   var turns = 0;
 
   function Entry(axis, direction) {
-    var position = find(players[me]);
+    var position = find(players[players.me]);
     this.axis = axis;
     this.direction = direction;
     this.time = new Date().getTime();
@@ -31,24 +30,24 @@ var turn;
     return new Entry(axis, direction);
   }
 
-  turn = function (direction) {
-    if (me === undefined) {
-      return this;
+  function turn(direction) {
+    if (players.me === undefined) {
+      return;
     }
-    if (!players[me].history.length) {
-      return console.log('No history, bro.');
+    if (!players[players.me].history.length) {
+      throw new Error('Awkward! No history...');
     }
     // TODO: validate against same direction
     turns += 1;
-    var entry = extract(direction),
-      turn = {};
-
-    turn[turns] = entry;
+    var entry = extract(direction);
 
     gun
-      .path(String(me))
+      .path(String(players.me))
       .path('history')
-      .put(turn);
-  };
+      .path(String(turns))
+      .put(entry);
+  }
+
+  stream.on('turn').run(turn);
 
 }());

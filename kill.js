@@ -1,20 +1,28 @@
-/*globals me, gun */
-
-var kill;
+/*globals gun, stream, players */
 
 (function () {
   'use strict';
-  kill = function () {
-    if (!me) {
+
+  function wait(time) {
+    stream.state.benched = true;
+    setTimeout(function () {
+      stream.state.benched = false;
+      stream.emit('approval', players.me);
+    }, time);
+  }
+
+  function kill() {
+    if (players.me === undefined) {
       return;
     }
+    wait(5000);
     gun
-      .path(String(me))
-      .put({
-        taken: false,
-        history: null
-      });
+      .path(String(players.me))
+      .path('taken').put(false)
+      .path('history').put(null);
 
-    me = undefined;
-  };
+    players.me = undefined;
+  }
+
+  stream.on('player died').run(kill);
 }());
