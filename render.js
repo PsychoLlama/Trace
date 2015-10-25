@@ -1,10 +1,9 @@
-/*globals Canvas, players, find */
+/*globals Canvas, players, find, stream */
 
-var render, tail;
 (function () {
   'use strict';
 
-  var options, draw, stopped,
+  var options, draw, stopped, tail, hooks = [],
     colors = ['green', 'blue', 'red', 'purple'],
     canvas = new Canvas({
       width: 500,
@@ -12,12 +11,14 @@ var render, tail;
     });
 
   options = {
-    width: 5,
+    width: 50,
     background: '#e8e8e8'
   };
 
-  render = function () {
+  function render() {
     draw.fresh();
+
+    stream.emit('render', tail);
 
     players
       .filter(function (player) {
@@ -29,7 +30,7 @@ var render, tail;
 
     window.requestAnimationFrame(render);
     return true;
-  };
+  }
 
   function setTail(current) {
     if (!tail) {
@@ -71,7 +72,7 @@ var render, tail;
     }
   };
 
-}());
+  // Spawn rendering loop
+  render();
 
-// Spawn rendering loop
-render();
+}());

@@ -1,8 +1,8 @@
-/*globals turn */
+/*globals stream */
 
 (function () {
   'use strict';
-  var keyboard, touch, move, xDown, yDown;
+  var xDown, yDown;
 
   function tie(cb) {
     return {
@@ -12,8 +12,12 @@
     };
   }
 
+  function turn(direction) {
+    return stream.emit('turn', direction);
+  }
+
   // listen for game input
-  keyboard = function (e) {
+  function keyboard(e) {
     var axis;
     switch (e.keyCode) {
     case 65:
@@ -29,14 +33,17 @@
     case 40:
       return turn('down');
     }
-  };
+  }
 
-  touch = function (e) {
+
+
+
+  function touch(e) {
     xDown = e.touches[0].clientX;
     yDown = e.touches[0].clientY;
-  };
+  }
 
-  move = function (e) {
+  function move(e) {
     if (!xDown || !yDown) {
       return;
     }
@@ -54,10 +61,17 @@
     } else {
       return yDiff > 0 ? turn('up') : turn('down');
     }
-  };
+  }
+
+
+  function resize() {
+
+  }
+
 
   tie(keyboard).to('keydown');
   tie(touch).to('touchstart');
   tie(move).to('touchmove');
+  tie(resize).to('resize');
 
 }());

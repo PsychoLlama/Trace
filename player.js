@@ -1,4 +1,4 @@
-/*globals Gun, me, hijack */
+/*globals Gun, stream */
 var gun, players;
 
 (function () {
@@ -31,26 +31,49 @@ var gun, players;
     return entry;
   }
 
-  // Subscribe to each player
-  gun.map(function (player, number) {
 
-    players[number] = cleaned(player);
-    players[number].history = [];
 
-    if (!player.taken && !me) {
-      hijack(number);
+  function hasHistory(number) {
+    var history,
+      player = players[number];
+    if (!player || player.history) {
+      return false;
     }
+    history = player.history;
+    if (!history) {
+      return false;
+    }
+    if (history.constructor !== Array) {
+      return false;
+    }
+    return true;
+  }
+
+
+
+  // Subscribe to each player
+  gun.map(function (data, number) {
+    players[number] = cleaned(data);
+
+    var history = hasHistory(number);
+
+    if (!history) {
+      players[number].history = [];
+    }
+
+    stream.emit('player update', players[number]);
   });
 
 
   // subscribe to all entries
-  ([0, 1, 2, 3]).forEach(function (player, number) {
+  (['0', '1', '2', '3']).forEach(function (player) {
 
     // subscribe to each player's history
-    gun
-      .path(number + '.history')
-      .map(function (entry, logNum) {
-        players[number].history[logNum] = cleaned(entry);
+    gun.path(player)
+      .path('history')
+      .map(function (entry, index) {
+        players[player]
+          .history[index] = cleaned(entry);
       });
 
   });

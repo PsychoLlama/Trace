@@ -27,6 +27,9 @@ var find;
 
   // find the current coordinate of the player
   find = function (player) {
+    if (player === undefined || !player.history.length) {
+      return null;
+    }
     var length = player.history.length,
       coord = player.history[length - 1],
       position = clone(coord);
