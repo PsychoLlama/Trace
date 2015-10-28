@@ -16,7 +16,7 @@
       return;
     }
     if (stream.state.benched) {
-      stream.on('approval').run(claim);
+      return stream.on('approval').run(claim);
     }
 
     players.me = player.num;

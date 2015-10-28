@@ -34,12 +34,12 @@
     if (players.me === undefined) {
       return;
     }
-    if (!players[players.me].history.length) {
-      throw new Error('Awkward! No history...');
+    var position = find(players[players.me]),
+      entry = extract(direction);
+    if (position.axis === entry.axis) {
+      return;
     }
-    // TODO: validate against same direction
     turns += 1;
-    var entry = extract(direction);
 
     gun
       .path(String(players.me))

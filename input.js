@@ -2,12 +2,12 @@
 
 (function () {
   'use strict';
-  var xDown, yDown;
+  var xDown, yDown, canvas = document.querySelector('canvas');
 
   function tie(cb) {
     return {
-      to: function (event) {
-        document.addEventListener(event, cb);
+      to: function (event, target) {
+        (target || document).addEventListener(event, cb);
       }
     };
   }
@@ -65,13 +65,32 @@
 
 
   function resize() {
+    var width = window.innerWidth,
+      height = window.innerHeight;
 
+    if (height > width) {
+      // Centering
+      canvas.style.left = 0;
+      canvas.style.top = (height / 2) - (width / 2);
+
+      canvas.style.width = width + "px";
+      canvas.style.height = width + "px";
+    } else {
+      // Centering
+      canvas.style.top = 0;
+      canvas.style.left = (width / 2) - (height / 2);
+
+      canvas.style.width = height + "px";
+      canvas.style.height = height + "px";
+    }
   }
 
 
   tie(keyboard).to('keydown');
   tie(touch).to('touchstart');
   tie(move).to('touchmove');
-  tie(resize).to('resize');
+  tie(resize).to('resize', window);
+  // initial canvas sizing
+  resize();
 
 }());

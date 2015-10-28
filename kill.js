@@ -5,24 +5,27 @@
 
   function wait(time) {
     stream.state.benched = true;
+    var player = players[players.me];
     setTimeout(function () {
       stream.state.benched = false;
-      stream.emit('approval', players.me);
+      stream.emit('approval', player);
     }, time);
   }
 
-  function kill() {
-    if (players.me === undefined) {
+  function kill(num) {
+    if (num === undefined) {
       return;
     }
-    wait(5000);
+    if (num === players.me) {
+      wait(5000);
+    }
     gun
-      .path(String(players.me))
+      .path(String(num))
       .path('taken').put(false)
       .path('history').put(null);
 
     players.me = undefined;
   }
 
-  stream.on('player died').run(kill);
+  stream.on('collision', 'expiry').run(kill);
 }());
