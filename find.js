@@ -3,6 +3,7 @@ var find;
 (function () {
   'use strict';
 
+  // for distance traveled
   var options = {
     speed: 0.1
   };

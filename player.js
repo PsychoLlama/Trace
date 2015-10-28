@@ -32,7 +32,8 @@ var gun, players;
   }
 
 
-
+  // Sometimes this function fails
+  // and ends up overwriting existing history
   function hasHistory(number) {
     var history,
       player = players[number];

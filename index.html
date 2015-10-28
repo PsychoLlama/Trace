@@ -1,6 +1,7 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <title>GUN TEST</title>
+    <title>Trace by gundb</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,
     initial-scale=1, maximum-scale=1, user-scalable=0"/>
@@ -9,14 +10,14 @@
         margin: 0;
         background-color: #202428;
       }
-      canvas {/*
+      canvas {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        width: 100vw;
-        height: 100vh;*/
+        width: 100vh;
+        height: 100vh;
         box-shadow: 0 0 10px #101418;
       }
     </style>
@@ -28,14 +29,16 @@
 
     <script src="gun.js"></script>
     <script src="stream.js"></script>
-    <script src="claim.js"></script>
-    <script src="kill.js"></script>
-    <script src="player.js"></script>
     <script src="canvas.js"></script>
     <script src="find.js"></script>
-    <script src="render.js"></script>
-    <script src="turn.js"></script>
-    <script src="collision.js"></script>
-    <script src="input.js"></script>
+    <script src="path.js"></script> <!--find-->
+    <script src="claim.js"></script> <!--gun players stream-->
+    <script src="kill.js"></script> <!--gun players stream-->
+    <script src="player.js"></script> <!--Gun stream-->
+    <script src="render.js"></script> <!--Canvas players find stream-->
+    <script src="turn.js"></script> <!--gun find players stream-->
+    <script src="collision.js"></script> <!--stream find players-->
+    <script src="input.js"></script> <!--stream-->
+    <script src="stale.js"></script> <!--gun players-->
   </body>
 </html>

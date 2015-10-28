@@ -24,19 +24,25 @@ var Stream, stream;
   };
 
   Stream.prototype = {
-    on: function (name) {
-      this.target = this.event[name];
-      if (!this.target) {
-        this.target = this.event[name] = [];
-        this.state[name] = {};
-      }
+    on: function () {
+      var events = array(arguments),
+        stream = this;
+      stream.target = events.map(function (event) {
+        if (!stream.event[event]) {
+          stream.event[event] = [];
+          stream.state[event] = {};
+        }
+        return stream.event[event];
+      });
       return this;
     },
 
     run: function () {
-      var target = this.target;
+      var stream = this;
       array(arguments).forEach(function (cb) {
-        target.push(cb);
+        stream.target.forEach(function (target) {
+          target.push(cb);
+        });
       });
 
       return this;
