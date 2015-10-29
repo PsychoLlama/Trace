@@ -5,10 +5,10 @@
 
   function wait(time) {
     stream.state.benched = true;
-    var player = players[players.me];
+    var num = players.me;
     setTimeout(function () {
       stream.state.benched = false;
-      stream.emit('approval', player);
+      stream.emit('approval', players[num]);
     }, time);
   }
 
@@ -19,12 +19,14 @@
     if (num === players.me) {
       wait(5000);
     }
-    gun
-      .path(String(num))
-      .path('taken').put(false)
-      .path('history').put(null);
+    gun.path(String(num)).put({
+      taken: false,
+      history: null
+    });
 
-    players.me = undefined;
+    if (num === players.me) {
+      players.me = undefined;
+    }
   }
 
   stream.on('collision', 'expiry').run(kill);
