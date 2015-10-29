@@ -71,14 +71,14 @@
     if (height > width) {
       // Centering
       canvas.style.left = 0;
-      canvas.style.top = (height / 2) - (width / 2);
+      canvas.style.top = (height / 2) - (width / 2) + 'px';
 
       canvas.style.width = width + "px";
       canvas.style.height = width + "px";
     } else {
       // Centering
       canvas.style.top = 0;
-      canvas.style.left = (width / 2) - (height / 2);
+      canvas.style.left = (width / 2) - (height / 2) + 'px';
 
       canvas.style.width = height + "px";
       canvas.style.height = height + "px";

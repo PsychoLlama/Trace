@@ -12,23 +12,21 @@
   }
 
   function claim(player) {
-    if (player.taken || players.me !== undefined) {
+    if (player.taken || players.me !== undefined || stream.state.benched) {
       return;
-    }
-    if (stream.state.benched) {
-      return stream.on('approval').run(claim);
     }
 
     players.me = player.num;
     var address = new Address();
 
-    gun.path(String(players.me))
-      .path('taken').put(true)
-      .path('history').set().put({
+    gun.path(String(players.me)).put({
+      taken: true,
+      history: {
         0: address
-      });
+      }
+    });
   }
 
-  stream.on('player update').run(claim);
+  stream.on('player update', 'approval').run(claim);
 
 }());

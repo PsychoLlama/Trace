@@ -52,7 +52,7 @@ var onAxis;
     overflow.x = position.x > canvas.width || position.x < 0;
     overflow.y = position.y > canvas.height || position.y < 0;
     if (overflow.x || overflow.y) {
-      stream.emit('collision', players[players.me]);
+      stream.emit('collision', players.me);
     }
   };
 

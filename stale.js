@@ -5,7 +5,6 @@
   'use strict';
 
   function reset(player) {
-    var num = player.num.toString();
     stream.emit('expiry', player.num);
   }
 
@@ -18,7 +17,7 @@
       entry = player.history[player.history.length - 1],
       elapsed = now - entry.time;
 
-    return elapsed > 15000;
+    return (elapsed > 15000);
   }
 
   function scan() {
@@ -26,6 +25,5 @@
   }
 
   setInterval(scan, 15000);
-  scan();
 
 }());
