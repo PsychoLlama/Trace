@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  var options, draw, prev, stopped, hooks = [],
+  var options, draw, prev, stopped, frame, hooks = [],
     colors = ['green', 'blue', 'red', 'purple'],
     canvas = new Canvas({
       width: 700,
@@ -37,7 +37,7 @@
     var position = find(players[players.me]);
     stream.emit('render', tail(position));
 
-    window.requestAnimationFrame(render);
+    frame = window.requestAnimationFrame(render);
   }
 
   draw = {
@@ -63,5 +63,11 @@
 
   // Spawn rendering loop
   render();
+
+
+  // TEMP: FOR DEBUGGING
+  stream.on('stop').run(function () {
+    window.cancelAnimationFrame(frame);
+  });
 
 }());

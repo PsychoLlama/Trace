@@ -50,4 +50,10 @@
 
   stream.on('turn').run(turn);
 
+  stream.on('kill').run(function (num) {
+    if (num === players.me) {
+      turns = 0;
+    }
+  });
+
 }());

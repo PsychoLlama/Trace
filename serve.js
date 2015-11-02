@@ -1,10 +1,11 @@
 /*jslint node: true, nomen: true */
 'use strict';
 var express = require('express'),
-  app = express();
+  app = express(),
+  port = process.argv[2] || 3000;
 
 app.use(express['static'](__dirname + '/'));
 
-app.listen(3000, function () {
-  console.log('Listening on port 3000');
+app.listen(port, function () {
+  console.log('Listening on port', port);
 });
