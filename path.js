@@ -8,6 +8,9 @@ var path, Line;
   var lines = [];
 
   Line = function (start, end) {
+    if (start === undefined || end === undefined) {
+      return null;
+    }
     var axis = start.axis,
       perpendicular = (axis === 'x') ? 'y' : 'x',
       intermediate;
@@ -30,6 +33,7 @@ var path, Line;
     var i, start, end, line, set = [],
       lines = player.history,
       position = find(player);
+
     if (!lines.length) {
       return [];
     }
@@ -40,8 +44,11 @@ var path, Line;
       line = new Line(start, end);
       set.push(line);
     }
+
     set.push(new Line(lines[i - 1], position));
-    return set;
+    return set.filter(function (line) {
+      return line !== null;
+    });
   };
 
 }());

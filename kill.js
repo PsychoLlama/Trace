@@ -16,6 +16,7 @@
     if (num === undefined) {
       return;
     }
+
     if (num === players.me) {
       wait(5000);
     }
@@ -24,9 +25,11 @@
       history: null
     });
 
+    stream.emit('kill', num);
     if (num === players.me) {
       players.me = undefined;
     }
+
   }
 
   stream.on('collision', 'expiry').run(kill);

@@ -24,6 +24,10 @@
     players.filter(stale).forEach(reset);
   }
 
-  setInterval(scan, 15000);
+  setInterval(scan, 1000);
+
+//  stream.on('render').run(function (tail) {
+//    console.log(tail);
+//  });
 
 }());

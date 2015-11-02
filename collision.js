@@ -1,12 +1,11 @@
 /*globals stream, find, players, path */
 /*jslint plusplus: true */
 
-var onAxis;
-
 (function () {
   'use strict';
 
-  var overflow, collision, position, invalid;
+  var position, invalid,
+    canvas = document.querySelector('canvas');
 
 
   function validate(tail) {
@@ -27,24 +26,22 @@ var onAxis;
 
 
 
-  onAxis = function (axis) {
-    return players.map(function (player) {
-      return path(player);
-    }).reduce(function (last, now) {
-      return last.concat(now);
-    }).filter(function (entry) {
-      return entry.axis === axis;
-    });
-  };
+  function onAxis(axis) {
+    return players.map(path)
+      .reduce(function (last, now) {
+        return last.concat(now);
+      }).filter(function (entry) {
+        return entry.axis === axis;
+      });
+  }
 
 
 
 
 
 
-  overflow = function () {
-    var canvas = document.querySelector('canvas'),
-      overflow = {};
+  function crash() {
+    var overflow = {};
     if (invalid) {
       return;
     }
@@ -54,9 +51,9 @@ var onAxis;
     if (overflow.x || overflow.y) {
       stream.emit('collision', players.me);
     }
-  };
+  }
 
-  collision = function (tail) {
+  function collision(tail) {
     if (invalid) {
       return;
     }
@@ -66,8 +63,10 @@ var onAxis;
 
 
     function inPath(line) {
-      if (line.start < position[perpendicular] &&
-          line.end > position[perpendicular]) {
+      var onLeft = line.start < position[perpendicular],
+        onRight = line.end > position[perpendicular];
+
+      if (onLeft && onRight) {
         return true;
       }
       return false;
@@ -91,8 +90,8 @@ var onAxis;
     if (overlapping) {
       stream.emit('collision', players.me);
     }
-  };
+  }
 
-  stream.on('render').run(validate, overflow, collision);
+  stream.on('render').run(validate, crash, collision);
 
 }());
