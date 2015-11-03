@@ -28,7 +28,7 @@ var find;
 
   // find the current coordinate of the player
   find = function (player) {
-    if (player === undefined || !player.history.length) {
+    if (!player || !player.history || !player.history.length) {
       return null;
     }
     var length = player.history.length,
