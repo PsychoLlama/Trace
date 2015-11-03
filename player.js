@@ -1,27 +1,31 @@
 /*globals Gun, stream */
-var gun, players;
+
+/*
+** Find and sync all players
+into the local players array
+*/
+
+
+var gun = new Gun('http://localhost:8080/gun')
+  .get('players')
+  .put({
+    0: {
+      num: 0
+    },
+    1: {
+      num: 1
+    },
+    2: {
+      num: 2
+    },
+    3: {
+      num: 3
+    }
+  }),
+  players = [];
 
 (function () {
   'use strict';
-
-  gun = new Gun('https://gungame.herokuapp.com/gun')
-    .get('players').set()
-    .put({
-      0: {
-        num: 0
-      },
-      1: {
-        num: 1
-      },
-      2: {
-        num: 2
-      },
-      3: {
-        num: 3
-      }
-    });
-
-  players = [];
 
   function cleaned(entry) {
     var meta = '_',
@@ -32,22 +36,16 @@ var gun, players;
   }
 
 
-  // Sometimes this function fails
-  // and ends up overwriting existing history
-  function hasHistory(number) {
-    var history,
-      player = players[number];
-    if (!player || player.history) {
-      return false;
+
+  function array(obj) {
+    var arr = [];
+    if (!obj) {
+      return arr;
     }
-    history = player.history;
-    if (!history) {
-      return false;
-    }
-    if (history.constructor !== Array) {
-      return false;
-    }
-    return true;
+    Object.keys(obj).forEach(function (key) {
+      arr[key] = cleaned(obj[key]);
+    });
+    return cleaned(arr);
   }
 
 
@@ -56,11 +54,7 @@ var gun, players;
   gun.map(function (data, number) {
     players[number] = cleaned(data);
 
-    var history = hasHistory(number);
-
-    if (!history) {
-      players[number].history = [];
-    }
+    players[number].history = array(data.history);
 
     stream.emit('player update', players[number]);
   });
@@ -73,8 +67,8 @@ var gun, players;
     gun.path(player)
       .path('history')
       .map(function (entry, index) {
-        players[player]
-          .history[index] = cleaned(entry);
+        var history = players[player].history;
+        history[index] = cleaned(entry);
       });
 
   });

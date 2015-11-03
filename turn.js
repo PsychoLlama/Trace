@@ -42,16 +42,16 @@
     turns += 1;
 
     gun
-      .path(String(players.me))
+      .path(players.me)
       .path('history')
-      .path(String(turns))
+      .path(turns)
       .put(entry);
   }
 
   stream.on('turn').run(turn);
 
   stream.on('kill').run(function (num) {
-    if (num === players.me) {
+    if (players.me === undefined) {
       turns = 0;
     }
   });

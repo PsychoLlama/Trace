@@ -12,6 +12,9 @@
   }
 
   function claim(player) {
+    if (player.constructor === Number) {
+      player = players[player];
+    }
     if (player.taken || players.me !== undefined || stream.state.benched) {
       return;
     }
@@ -19,7 +22,7 @@
     players.me = player.num;
     var address = new Address();
 
-    gun.path(String(players.me)).put({
+    gun.path(players.me).put({
       taken: true,
       history: {
         0: address
@@ -27,6 +30,6 @@
     });
   }
 
-  stream.on('player update', 'approval').run(claim);
+  stream.on('player update', 'approval', 'kill').run(claim);
 
 }());

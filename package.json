@@ -25,6 +25,6 @@
   },
   "homepage": "https://github.com/PsychoLlama/Tron#readme",
   "dependencies": {
-    "gun": "^0.2.1"
+    "gun": "^0.2.5"
   }
 }
