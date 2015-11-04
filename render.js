@@ -3,12 +3,14 @@
 (function () {
   'use strict';
 
-  var options, draw, prev, stopped, frame, hooks = [],
-    colors = ['green', 'blue', 'red', 'purple'],
-    canvas = new Canvas({
-      width: 700,
-      height: 700
-    });
+  var options, draw, prev, canvas, colors;
+
+  colors = ['green', 'blue', 'red', 'purple'];
+
+  canvas = new Canvas({
+    width: 700,
+    height: 700
+  });
 
   options = {
     width: 5,
@@ -27,17 +29,19 @@
     return trail;
   }
 
+  function playing(player) {
+    return player.history && player.history.length;
+  }
+
   function render() {
-    draw.fresh();
-
-    players.filter(function (player) {
-      return player.history && player.history.length;
-    }).forEach(draw.history);
-
     var position = find(players[players.me]);
+
+    players.filter(playing)
+      .forEach(draw.fresh().history);
+
     stream.emit('render', tail(position));
 
-    frame = window.requestAnimationFrame(render);
+    window.requestAnimationFrame(render);
   }
 
   draw = {
@@ -51,9 +55,8 @@
       var color = colors[player.num],
         position = find(player);
 
-      player.history.forEach(function (entry) {
-        canvas.width(1).line(entry);
-      });
+      player.history
+        .forEach(canvas.width(1).line);
 
       canvas.line(position).stroke(color);
 
@@ -63,11 +66,5 @@
 
   // Spawn rendering loop
   render();
-
-
-  // TEMP: FOR DEBUGGING
-  stream.on('stop').run(function () {
-    window.cancelAnimationFrame(frame);
-  });
 
 }());

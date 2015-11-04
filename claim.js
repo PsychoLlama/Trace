@@ -28,6 +28,8 @@
         0: address
       }
     });
+
+    stream.emit('claim', player.num);
   }
 
   stream.on('player update', 'approval', 'kill').run(claim);

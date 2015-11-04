@@ -24,6 +24,7 @@ var Stream, stream;
   };
 
   Stream.prototype = {
+    constructor: Stream,
     on: function () {
       var events = array(arguments),
         stream = this;

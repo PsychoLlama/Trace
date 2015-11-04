@@ -83,9 +83,7 @@
     }
 
     overlapping = onAxis(perpendicular)
-      .filter(inPath)
-      .filter(crossing)
-      .length;
+      .filter(inPath).filter(crossing).length;
 
     if (overlapping) {
       stream.emit('collision', players.me);

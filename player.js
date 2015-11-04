@@ -1,28 +1,28 @@
 /*globals Gun, stream */
 
 /*
-** Find and sync all players
+
+Find and sync all players
 into the local players array
+
 */
 
 
-var gun = new Gun('http://localhost:8080/gun')
-  .get('players')
-  .put({
-    0: {
-      num: 0
-    },
-    1: {
-      num: 1
-    },
-    2: {
-      num: 2
-    },
-    3: {
-      num: 3
-    }
-  }),
-  players = [];
+var gun = new Gun('https://gungame.herokuapp.com/gun').get('players'),
+  players;
+
+gun.array(players = [
+  {
+    num: 0
+  }, {
+    num: 1
+  }, {
+    num: 2
+  }, {
+    num: 3
+  }
+]);
+
 
 (function () {
   'use strict';
@@ -52,7 +52,7 @@ var gun = new Gun('http://localhost:8080/gun')
 
   // Subscribe to each player
   gun.map(function (data, number) {
-    players[number] = cleaned(data);
+    players[number].taken = !!data.taken;
 
     players[number].history = array(data.history);
 
@@ -60,14 +60,13 @@ var gun = new Gun('http://localhost:8080/gun')
   });
 
 
-  // subscribe to all entries
-  (['0', '1', '2', '3']).forEach(function (player) {
+  // subscribe to each player's entries
+  players.forEach(function (obj, i) {
 
     // subscribe to each player's history
-    gun.path(player)
-      .path('history')
+    gun.path(i).path('history')
       .map(function (entry, index) {
-        var history = players[player].history;
+        var history = players[i].history;
         history[index] = cleaned(entry);
       });
 
