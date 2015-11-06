@@ -11,16 +11,22 @@
     this.time = new Date().getTime();
   }
 
-  function claim(player) {
-    if (player.constructor === Number) {
-      player = players[player];
-    }
-    if (player.taken || players.me !== undefined || stream.state.benched) {
+  function claim() {
+
+    var player, address = new Address(), open;
+
+    open = players.some(function (target) {
+      if (!target.taken) {
+        return (player = target);
+      }
+    });
+
+    if (!open || !isNaN(players.me) || stream.state.benched) {
       return;
     }
+    window.console.log('claiming', player.num);
 
     players.me = player.num;
-    var address = new Address();
 
     gun.path(players.me).put({
       taken: true,

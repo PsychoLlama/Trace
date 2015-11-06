@@ -1,4 +1,5 @@
 /*globals Gun, stream */
+/*jslint nomen: true */
 
 /*
 
@@ -28,10 +29,8 @@ gun.array(players = [
   'use strict';
 
   function cleaned(entry) {
-    var meta = '_',
-      soul = '#';
-    delete entry[meta];
-    delete entry[soul];
+    delete entry._;
+    delete entry['#'];
     return entry;
   }
 
@@ -49,26 +48,48 @@ gun.array(players = [
   }
 
 
-
-  // Subscribe to each player
+  // subscribe to each player's status
   gun.map(function (data, number) {
     players[number].taken = !!data.taken;
-
-    players[number].history = array(data.history);
-
-    stream.emit('player update', players[number]);
   });
+
+  // wait until we're fairly certain that
+  // we've got current information
+  // before trying to grab a player
+  setTimeout(function () {
+    stream.emit('player update');
+  }, 5000);
+
 
 
   // subscribe to each player's entries
   players.forEach(function (obj, i) {
 
+
     // subscribe to each player's history
     gun.path(i).path('history')
       .map(function (entry, index) {
-        var history = players[i].history;
-        history[index] = cleaned(entry);
+        var player = players[i];
+        if (!player.history || player.history.constructor === Object) {
+          player.history = array(player.history);
+        }
+        players[i].history[index] = cleaned(entry);
       });
 
+
+    // handle empty history
+    gun.path(i).map(function () {
+
+      this.path('history').val(function (val) {
+        if (val === null) {
+          // the history has been nulled
+          players[i].history = [];
+        }
+      });
+
+    });
+
+
   });
+
 }());

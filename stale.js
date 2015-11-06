@@ -1,4 +1,4 @@
-/*globals players, gun, stream */
+/*globals players, stream */
 // remove players after 15 seconds of inactivity
 
 (function () {
@@ -25,9 +25,5 @@
   }
 
   setInterval(scan, 1000);
-
-//  stream.on('render').run(function (tail) {
-//    console.log(tail);
-//  });
 
 }());
