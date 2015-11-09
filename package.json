@@ -2,7 +2,7 @@
   "name": "tron",
   "version": "1.0.0",
   "description": "Real-time multiplayer tron game using GunDB",
-  "main": "gun.js",
+  "main": "main.js",
   "scripts": {
     "test": "prove"
   },
