@@ -23,6 +23,8 @@
     gun.path(num).put({
       taken: false,
       history: null
+    }, function () {
+      location.reload(true);
     });
 
     if (num === players.me) {

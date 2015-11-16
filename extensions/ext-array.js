@@ -1,4 +1,4 @@
-/*globals Gun, console */
+/*globals Gun */
 
 (function () {
   'use strict';

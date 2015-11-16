@@ -2,7 +2,8 @@
 
 (function () {
   'use strict';
-  var xDown, yDown, canvas = document.querySelector('canvas');
+  var xDown, yDown, turn = stream.bind('turn'),
+    canvas = document.querySelector('canvas');
 
   function tie(cb) {
     return {
@@ -10,10 +11,6 @@
         (target || document).addEventListener(event, cb);
       }
     };
-  }
-
-  function turn(direction) {
-    return stream.emit('turn', direction);
   }
 
   // listen for game input

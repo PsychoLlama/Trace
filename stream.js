@@ -17,6 +17,12 @@ var Stream, stream;
   }
 
   Stream = function () {
+    var instance = this instanceof Stream;
+
+    if (!instance) {
+      return new Stream();
+    }
+
     this.event = {};
     this.state = {};
 
@@ -64,6 +70,19 @@ var Stream, stream;
         } catch (e) {}
       });
       return this;
+    },
+
+    bind: function () {
+      var events = array(arguments),
+        stream = this;
+
+      return function () {
+        var args = array(arguments);
+
+        events.forEach(function (event) {
+          stream.emit.apply(stream, [event].concat(args));
+        });
+      };
     }
   };
 
@@ -72,6 +91,20 @@ var Stream, stream;
       stream.emit(name);
     });
     return Stream;
+  };
+
+  Stream.bind = function () {
+    var events = array(arguments);
+
+    return function () {
+      var args = array(arguments);
+
+      streams.forEach(function (stream) {
+        events.forEach(function (event) {
+          stream.emit.apply(stream, [event].concat(args));
+        });
+      });
+    };
   };
 
   stream = new Stream();

@@ -24,7 +24,6 @@
     if (!open || !isNaN(players.me) || stream.state.benched) {
       return;
     }
-    window.console.log('claiming', player.num);
 
     players.me = player.num;
 
