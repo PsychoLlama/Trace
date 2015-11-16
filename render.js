@@ -18,13 +18,18 @@
   };
 
   function tail(position) {
+    var turns, trail;
     if (!position) {
       return null;
     }
     if (!prev) {
       prev = position;
     }
-    var trail = new Line(prev, position);
+    if (prev.axis !== position.axis) {
+      turns = players[players.me].history;
+      prev = turns[turns.length - 1];
+    }
+    trail = new Line(prev, position);
     prev = position;
     return trail;
   }

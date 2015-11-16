@@ -24,7 +24,7 @@
       taken: false,
       history: null
     }, function () {
-      location.reload(true);
+//      location.reload(true);
     });
 
     if (num === players.me) {

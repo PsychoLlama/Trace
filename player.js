@@ -50,6 +50,9 @@ gun.array(players = [
 
   // subscribe to each player's status
   gun.map(function (data, number) {
+    if (!players[number]) {
+      return;
+    }
     players[number].taken = !!data.taken;
   });
 
