@@ -4,13 +4,13 @@ A simple game meant to demonstrate the use of gun in collaborative, real-time we
 
 ## Trying it out
 
-> **Note:** still in beta! Instructions are rough around the edges.
+> **Note:** still in beta! The game is rough around the edges.
 
-Run `$ git clone <trace>` in the terminal. Install everything by running
-`$ npm i`, then update the `gun` version by going to their develop branch
-and copying the file into `node_modules/gun/gun.js`.
-Start serving up the page by running `$ node server` in the terminal.
+In your terminal, run:
 
-> Very rough around the edges. Hit me up on [gitter](http://gitter.im/PsychoLlama) if you have questions.
+ 1. `git clone <trace-url>`
+ 2. `cd Trace`
+ 3. `npm i`
+ 4. `node server`
 
 Now the game should be available at `http://localhost:3000`.
