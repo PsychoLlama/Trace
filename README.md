@@ -11,6 +11,6 @@ Run `$ git clone <trace>` in the terminal. Install everything by running
 and copying the file into `node_modules/gun/gun.js`.
 Start serving up the page by running `$ node server` in the terminal.
 
-> Very rough around the edges. Hit me up on [gitter](gitter.im/PsychoLlama) if you have questions.
+> Very rough around the edges. Hit me up on [gitter](http://gitter.im/PsychoLlama) if you have questions.
 
 Now the game should be available at `http://localhost:3000`.
