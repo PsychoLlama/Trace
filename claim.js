@@ -13,8 +13,9 @@
 
   function claim() {
 
-    var player, address = new Address(), open;
+    var player, open;
 
+		// players.some returns a boolean
     open = players.some(function (target) {
       if (!target.taken) {
         return (player = target);
@@ -30,7 +31,7 @@
     gun.path(players.me).put({
       taken: true,
       history: {
-        0: address
+        0: new Address()
       }
     });
 
