@@ -1,7 +1,0 @@
-{
-  "name": "gun-gaming",
-  "description": "No storage layer, just in-memory gaming state and sync.",
-  "repository": "https://github.com/gundb/gaming",
-  "logo": "https://avatars3.githubusercontent.com/u/8811914",
-  "keywords": ["node", "gun", "gunDB", "gaming", "p2p"]
-}
