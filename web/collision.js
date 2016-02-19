@@ -1,55 +1,38 @@
-/*globals stream, find, players, path */
 /*jslint plusplus: true, node: true */
-
 'use strict';
+var Gun = require('gun/gun');
+var local = require('./local');
+var find = require('./find');
+var path = require('./path');
+var kick = require('./kick');
+var sort = require('./sort');
+var line = require('./line');
+var players = local.players;
+var player = local.player;
 
-var position, invalid, canvas, prev;
-canvas = document.querySelector('canvas');
-var Path = require('./path');
+var position, prev, boundary = 700;
 
-function tail(position) {
-	var turns, trail;
+function tail() {
+
+	// we're not playing yet
 	if (!position) {
 		return null;
 	}
 	if (!prev) {
 		prev = position;
 	}
+
+	/*
+		If we've turned since the last
+		collision check, use that turn
+		as our last position.
+	*/
 	if (prev.axis !== position.axis) {
-		turns = players[players.me].history;
-		prev = turns[turns.length - 1];
+		prev = sort(player.object).slice(-1);
 	}
-	trail = new Path(prev, position);
-	prev = position;
-	return trail;
-}
 
-
-function validate(tail) {
-	var player = players[players.me];
-	position = find(player);
-
-	if (!player || !player.history) {
-		return (invalid = true);
-	}
-	if (player.history.length === 0) {
-		return (invalid = true);
-	}
-	if (!position || tail === null) {
-		return (invalid = true);
-	}
-	invalid = false;
-}
-
-
-
-function onAxis(axis) {
-	return players.map(path)
-		.reduce(function (last, now) {
-			return last.concat(now);
-		}).filter(function (entry) {
-			return entry.axis === axis;
-		});
+	// figure out the path between renders
+	return line(prev, prev = position);
 }
 
 
@@ -57,56 +40,65 @@ function onAxis(axis) {
 
 
 
-function crash() {
+
+
+
+function outOfBounds() {
 	var overflow = {};
-	if (invalid) {
-		return;
-	}
 
-	overflow.x = position.x > canvas.width || position.x < 0;
-	overflow.y = position.y > canvas.height || position.y < 0;
-	if (overflow.x || overflow.y) {
-		stream.emit('collision', players.me);
-	}
+	overflow.x = position.x > boundary || position.x < 0;
+	overflow.y = position.y > boundary || position.y < 0;
+	return (overflow.x || overflow.y);
 }
 
-function collision(tail) {
-	if (invalid) {
-		return;
+function inPath(line) {
+	var onLeft, onRight, perp;
+	perp = (position.axis === 'x') ? 'y' : 'x';
+	onLeft = line.start < position[perp];
+	onRight = line.end > position[perp];
+
+	if (onLeft && onRight) {
+		return true;
 	}
-
-	var overlapping,
-		perpendicular = (position.axis === 'x') ? 'y' : 'x';
-
-
-	function inPath(line) {
-		var onLeft = line.start < position[perpendicular],
-			onRight = line.end > position[perpendicular];
-
-		if (onLeft && onRight) {
-			return true;
-		}
-		return false;
-	}
-
-	function crossing(line) {
-		if (line.offset >= tail.start && line.offset <= tail.end) {
-			return true;
-		}
-		if (line.offset <= tail.start && line.offset >= tail.end) {
-			return true;
-		}
-		return false;
-	}
-
-	overlapping = onAxis(perpendicular)
-		.filter(inPath).filter(crossing).length;
-
-	if (overlapping) {
-		stream.emit('collision', players.me);
-	}
+	return false;
 }
 
-stream.on('render').run(validate, crash, collision);
+function crossing(line) {
+	var thing = tail();
+	if (line.offset >= thing.start && line.offset <= thing.end) {
+		return true;
+	}
+	if (line.offset <= thing.start && line.offset >= thing.end) {
+		return true;
+	}
+	return false;
+}
 
-module.exports = collision;
+function collision() {
+	var lines = [];
+
+	// add every player's history to the list of lines
+	Gun.obj.map(players.list, function (player, number) {
+		var history = path(player);
+		lines = lines.concat(history);
+	});
+
+	/*
+		Filter out lines that aren't dangerous,
+		then filter out the ones that aren't in
+		your way, then filter out the ones you're
+		not overlapping with.
+	*/
+	return lines.filter(function (line) {
+		return line.axis !== position.axis;
+	}).filter(inPath).filter(crossing).length;
+}
+
+module.exports = (function detect() {
+	position = find(player.object);
+	if (position && (outOfBounds() || collision())) {
+		kick(player);
+		prev = null;
+	}
+	return window.requestAnimationFrame(detect);
+}());

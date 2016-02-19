@@ -1,54 +1,49 @@
-/*globals find */
+/*jslint node: true*/
+'use strict';
+var find = require('./find');
+var sort = require('./sort');
+var line = require('./line');
 
-var path, Line;
+function line(start, end) {
+	if (!start || !end) {
+		return null;
+	}
+	var temp, perp, axis = start.axis;
+	perp = (axis === 'x') ? 'y' : 'x';
 
-(function () {
-  'use strict';
+	// always record going from top to bottom, left to right
+	if (start[axis] > end[axis]) {
+		temp = start;
+		start = end;
+		end = temp;
+	}
 
-  var lines = [];
+	return {
+		start: start[axis],
+		end: end[axis],
+		offset: end[perp],
+		axis: axis
+	};
+}
 
-  Line = function (start, end) {
-    if (start === undefined || end === undefined) {
-      return null;
-    }
-    var axis = start.axis,
-      perpendicular = (axis === 'x') ? 'y' : 'x',
-      intermediate;
+module.exports = function path(player) {
+	var	position, lines;
+	if (!player) {
+		return [];
+	}
 
-    // always record going from top to bottom, left to right
-    if (start[axis] > end[axis]) {
-      intermediate = start;
-      start = end;
-      end = intermediate;
-    }
+	lines = sort(player);
+	position = find(player);
+	if (!lines.length) {
+		return [];
+	}
 
-    this.start = start[axis];
-    this.end = end[axis];
-    this.offset = end[perpendicular];
-    this.axis = axis;
-
-  };
-
-  path = function (player) {
-    var i, start, end, line, set = [],
-      lines = player.history,
-      position = find(player);
-
-    if (!lines.length) {
-      return [];
-    }
-
-    for (i = 1; i < lines.length; i += 1) {
-      start = lines[i - 1];
-      end = lines[i];
-      line = new Line(start, end);
-      set.push(line);
-    }
-
-    set.push(new Line(lines[i - 1], position));
-    return set.filter(function (line) {
-      return line !== null;
-    });
-  };
-
-}());
+	lines.push(position);
+	return lines.map(function (start, i) {
+		if (i === lines.length - 1) {
+			return;
+		}
+		var end = lines[i + 1];
+		return line(start, end);
+	}).filter(Boolean);
+};

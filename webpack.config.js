@@ -1,9 +1,9 @@
 /*jslint node: true, nomen: true*/
 module.exports = {
 	context: __dirname + '/web',
-	entry: './trace.js',
+	entry: './index.js',
 	output: {
-		path: __dirname + '/web',
+		path: __dirname + '/dist',
 		filename: 'bundle.js'
 	}
 };

@@ -1,23 +1,12 @@
 /*jslint node: true*/
 'use strict';
-localStorage.clear();
-
 var Gun = require('gun/gun');
-var kick = require('./kick');
-var local = require('./local');
-var claim = require('./claim');
+var local = require('../local');
+var claim = require('../claim');
+var kick = require('../kick');
+var waiting = local.gun.get('waitlist');
 var chosen = local.gun.get('chosen');
-
-// start the rendering loop
-require('./render');
-
-// initialize keyboard listeners
-require('./input');
-
-
-var token = Gun.text.random();
-
-local.gun.get('waitlist').path(token).put(token);
+var token;
 
 chosen.map(function (serving, player) {
 
@@ -30,7 +19,14 @@ chosen.map(function (serving, player) {
 
 		// no support in firefox :(
 		window.addEventListener('beforeunload', function () {
-			kick(player);
+
+			// leave the game permanently
+			kick(local.player, true);
 		});
 	}
 });
+
+module.exports = function () {
+	token = Gun.text.random();
+	return waiting.path(token).put(token);
+};
