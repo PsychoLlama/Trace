@@ -23,9 +23,9 @@ function distance(coord) {
 }
 
 // find the current coordinate of the player
-function find(player) {
+module.exports = function find(player) {
 	var coord, position;
-	coord = sort(player).reverse()[0];
+	coord = sort(player).slice(-1)[0];
 
 	// if the player has no history
 	if (!coord) {
@@ -39,6 +39,4 @@ function find(player) {
 	position.time = Gun.time.now();
 
 	return position;
-}
-
-module.exports = find;
+};

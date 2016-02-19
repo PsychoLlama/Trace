@@ -5,7 +5,7 @@
 var local = require('./local');
 
 module.exports = function (player, done) {
-	var join = require('./waitroom/join');
+	var join = require('./join');
 	local.players.db.path(player.index).put(null);
 	player.object = null;
 	player.index = null;

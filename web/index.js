@@ -2,7 +2,7 @@
 'use strict';
 localStorage.clear();
 
-var join = require('./waitroom/join');
+var join = require('./join');
 
 // join the waitroom
 join();

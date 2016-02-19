@@ -11,10 +11,10 @@ var players = local.players.list;
 
 // green, blue, red, yellow
 var colors = [
-	'rgb(122, 216, 133)',
-	'rgb(236, 104, 89)',
-	'rgb(77, 121, 216)',
-	'rgb(255, 211, 72)'
+	'#18c956',
+	'#0075c4',
+	'#ff6044',
+	'#f2cc6d'
 ];
 
 var options = {
@@ -42,7 +42,8 @@ var canvas = new Canvas({
 			lines.push(find(player));
 
 			// draw each turn on the canvas
-			lines.forEach(canvas.width(3).line);
+			canvas.width(options.width);
+			lines.forEach(canvas.line);
 			canvas.stroke(colors[index - 1]);
 		}
 	});

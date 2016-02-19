@@ -1,13 +1,16 @@
 /*jslint node: true*/
 'use strict';
 var Gun = require('gun/gun');
-var local = require('../local');
-var claim = require('../claim');
-var kick = require('../kick');
+var local = require('./local');
+var claim = require('./claim');
+var kick = require('./kick');
 var waiting = local.gun.get('waitlist');
 var chosen = local.gun.get('chosen');
 var token;
 
+function leave() {
+	kick(local.player, true);
+}
 chosen.map(function (serving, player) {
 
 	if (serving === token) {
@@ -18,11 +21,10 @@ chosen.map(function (serving, player) {
 		claim(player);
 
 		// no support in firefox :(
-		window.addEventListener('beforeunload', function () {
+		window.addEventListener('beforeunload', leave);
 
-			// leave the game permanently
-			kick(local.player, true);
-		});
+		// uncomment for production
+//		window.addEventListener('blur', leave);
 	}
 });
 
