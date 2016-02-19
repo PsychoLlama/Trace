@@ -9,6 +9,11 @@ function expired(player) {
 	return (Gun.time.now() - max) * vel > 1000;
 }
 
+/*
+	instead of a fixed timeout,
+	why not detect wall overlap + latency?
+	That would speed up kicking.
+*/
 setInterval(function () {
 	Gun.obj.map(game.players, function (player, number) {
 		if (!player) {

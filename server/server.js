@@ -9,7 +9,7 @@ var game = require('./game');
 // remove inactive players
 require('./game/expire');
 
-app.use(express['static'](__dirname + '/../web'));
+app.use(express['static'](__dirname + '/../dist'));
 
 var Gun = require('gun/gun');
 var gun = require('./gun');
