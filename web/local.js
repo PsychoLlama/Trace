@@ -4,7 +4,7 @@ var Gun = require('gun/gun');
 
 var players, gun = new Gun(location + 'gun');
 
-require('../lib/sync');
+require('../shared/sync');
 //require('../lib/nts');
 
 Gun.chain.stringify = function (obj) {
@@ -12,7 +12,7 @@ Gun.chain.stringify = function (obj) {
 };
 
 
-module.exports = window.local = {
+module.exports = {
 	gun: gun,
 
 	players: {
@@ -24,5 +24,7 @@ module.exports = window.local = {
 		db: null,
 		object: null,
 		index: null
-	}
+	},
+
+	justJoined: false
 };

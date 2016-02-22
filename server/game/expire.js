@@ -3,18 +3,21 @@
 
 var Gun = require('gun/gun');
 var game = require('./index');
+var options = require('../../shared/options');
 
 function expired(player) {
-	var max, vel = 0.1;
+	var max, vel = options.speed;
 	max = Math.max.apply(Math, Object.keys(player));
-	return (Gun.time.now() - max) * vel > 1000;
+
+	// distance travelled is greater than the board, plus latency
+	return (Gun.time.now() - (max + options.latency)) * vel > 700;
 }
 
 /*
 	instead of a fixed timeout,
 	why not detect wall overlap + latency?
 	That would speed up kicking.
-	Move to collision.js to isomorph.
+	Move to collision.js to 'shared'.
 */
 setInterval(function () {
 	Gun.obj.map(game.players, function (player, number) {

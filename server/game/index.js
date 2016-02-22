@@ -3,6 +3,7 @@
 var Gun = require('gun/gun');
 var gun = require('../gun');
 var players = {};
+var waiting = require('../waitroom');
 
 gun.get('players').put({
   1: null,
@@ -15,7 +16,8 @@ gun.get('players').put({
 module.exports = {
 	vacant: function () {
 		return Gun.obj.map(players, function (player, num) {
-			if (!player) {
+			// check for players who've been chosen, but haven't joined yet.
+			if (!player && !waiting.chosen[num]) {
 				return num;
 			}
 		}) || null;

@@ -7,6 +7,7 @@ var chosen = require('../gun').get('chosen').put({
 	3: null,
 	4: null
 }).sync(list = {});
+require('./index').chosen = list;
 
 // if no response, choose another player
 module.exports = function confirm(num, soul) {

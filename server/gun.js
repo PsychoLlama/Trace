@@ -1,6 +1,6 @@
 /*jslint node: true */
 'use strict';
 var gun, Gun = require('gun');
-require('../lib/sync');
+require('../shared/sync');
 
 module.exports = new Gun();

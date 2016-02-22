@@ -6,21 +6,8 @@ var Canvas = require('./canvas');
 var local = require('./local');
 var sort = require('./sort');
 var find = require('./find');
+var options = require('../shared/options');
 var players = local.players.list;
-
-
-// green, blue, red, yellow
-var colors = [
-	'#18c956',
-	'#0075c4',
-	'#ff6044',
-	'#f2cc6d'
-];
-
-var options = {
-	width: 5,
-	background: '#202428'
-};
 
 var canvas = new Canvas({
 	width: 700,
@@ -28,7 +15,7 @@ var canvas = new Canvas({
 });
 
 // self invoke and begin the render loop
-(function render() {
+module.exports = function () {
 	// start fresh
 	canvas.clear(options.background);
 
@@ -44,9 +31,8 @@ var canvas = new Canvas({
 			// draw each turn on the canvas
 			canvas.width(options.width);
 			lines.forEach(canvas.line);
-			canvas.stroke(colors[index - 1]);
+			canvas.stroke(options.colors[index - 1]);
 		}
 	});
 
-	return window.requestAnimationFrame(render);
-}());
+};

@@ -9,6 +9,7 @@ var sort = require('./sort');
 var line = require('./line');
 var players = local.players;
 var player = local.player;
+var invincible = local.justJoined;
 
 var position, prev, boundary = 700;
 
@@ -64,11 +65,12 @@ function inPath(line) {
 }
 
 function crossing(line) {
-	var thing = tail();
-	if (line.offset >= thing.start && line.offset <= thing.end) {
+	// find the path from your last render
+	var prev = tail();
+	if (line.offset >= prev.start && line.offset <= prev.end) {
 		return true;
 	}
-	if (line.offset <= thing.start && line.offset >= thing.end) {
+	if (line.offset <= prev.start && line.offset >= prev.end) {
 		return true;
 	}
 	return false;
@@ -94,11 +96,14 @@ function collision() {
 	}).filter(inPath).filter(crossing).length;
 }
 
-module.exports = (function detect() {
+module.exports = function () {
 	position = find(player.object);
-	if (position && (outOfBounds() || collision())) {
-		kick(player);
-		prev = null;
+
+	if (position && !invincible) {
+		var dead = outOfBounds() || collision();
+		if (dead) {
+			kick(player);
+			prev = null;
+		}
 	}
-	return window.requestAnimationFrame(detect);
-}());
+};
