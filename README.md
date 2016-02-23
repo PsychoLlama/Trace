@@ -14,7 +14,3 @@ In your terminal, run:
  4. `node server`
 
 Now the game should be available at `http://localhost:8080`.
-
-Or navigate to `trace.PsychoLlama.io`
-
-<!--note: figure out hosted solutions with PM2 and gun (as well as DNS passthrough)-->
