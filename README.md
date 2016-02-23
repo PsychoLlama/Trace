@@ -4,13 +4,17 @@ A simple game meant to demonstrate the use of gun in collaborative, real-time we
 
 ## Trying it out
 
-If you want to see the game in action, it's pretty straightforward. Just clone or download the source files and run the following in it's directory:
+> **Note:** still in beta! The game is rough around the edges.
 
-```
-npm install
-node serve.js
-```
+In your terminal, run:
 
-Now the game should be available at `http://localhost:3000`.
+ 1. `git clone https://github.com/PsychoLlama/Trace.git`
+ 2. `cd Trace`
+ 3. `npm i`
+ 4. `node server`
 
-Have fun, and feel free to submit a pull request with features or bug fixes.
+Now the game should be available at `http://localhost:8080`.
+
+Or navigate to `trace.PsychoLlama.io`
+
+<!--note: figure out hosted solutions with PM2 and gun (as well as DNS passthrough)-->

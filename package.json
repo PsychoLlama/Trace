@@ -4,7 +4,9 @@
   "description": "Real-time multiplayer tron game using GunDB",
   "main": "main.js",
   "scripts": {
-    "test": "prove"
+    "start": "node server/server.js 8080",
+    "test": "echo \"No tests to run!\" && exit 0",
+    "build": "webpack --watch"
   },
   "repository": {
     "type": "git",
@@ -26,6 +28,9 @@
   "homepage": "https://github.com/PsychoLlama/Tron#readme",
   "dependencies": {
     "express": "^4.13.3",
-    "gun": "^0.2.5"
+    "gun": "^0.3.5"
+  },
+  "devDependencies": {
+    "webpack": "^1.12.13"
   }
 }
