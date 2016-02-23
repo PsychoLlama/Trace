@@ -9,8 +9,6 @@ var sort = require('./sort');
 var line = require('./line');
 var players = local.players;
 var player = local.player;
-var invincible = local.justJoined;
-
 var position, prev, boundary = 700;
 
 function tail() {
@@ -99,7 +97,7 @@ function collision() {
 module.exports = function () {
 	position = find(player.object);
 
-	if (position && !invincible) {
+	if (position && !local.justJoined) {
 		var dead = outOfBounds() || collision();
 		if (dead) {
 			kick(player);
