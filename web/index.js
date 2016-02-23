@@ -9,9 +9,6 @@ var collision = require('./collision');
 // join the waitroom
 join();
 
-// begin clock synchronization
-//require('../lib/nts');
-
 // initialize keyboard listeners
 require('./input');
 
