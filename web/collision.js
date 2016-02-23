@@ -27,7 +27,8 @@ function tail() {
 		as our last position.
 	*/
 	if (prev.axis !== position.axis) {
-		prev = sort(player.object).slice(-1)[0];
+		prev = sort(player.object);
+		prev = prev[prev.length - 1];
 	}
 
 	// figure out the path between renders

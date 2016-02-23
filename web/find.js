@@ -25,7 +25,8 @@ function distance(coord) {
 // find the current coordinate of the player
 module.exports = function find(player) {
 	var coord, position;
-	coord = sort(player).slice(-1)[0];
+	coord = sort(player);
+	coord = coord[coord.length - 1];
 
 	// if the player has no history
 	if (!coord) {
