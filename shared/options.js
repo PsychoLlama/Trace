@@ -1,7 +1,7 @@
 /*jslint node: true*/
 module.exports = {
 	speed: 0.1,
-	width: 1,
+	width: 3,
 	background: "#202428",
 	colors: [
 		"#18c956",
@@ -10,5 +10,6 @@ module.exports = {
 		"#f2cc6d"
 	],
 	invincibility: 3000,
+	blinkSpeed: 125,
 	latency: 3000
 };

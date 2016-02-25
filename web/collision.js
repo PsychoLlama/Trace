@@ -7,6 +7,7 @@ var path = require('./path');
 var kick = require('./kick');
 var sort = require('./sort');
 var line = require('./line');
+var invincible = require('./invincibility');
 var players = local.players;
 var player = local.player;
 var position, prev, boundary = 700;
@@ -99,8 +100,11 @@ function collision() {
 module.exports = function () {
 	position = find(player.object);
 
-	if (position && !local.justJoined) {
-		var dead = outOfBounds() || collision();
+	if (position) {
+		var dead = outOfBounds();
+		if (!invincible.list[player.index]) {
+			dead = dead || collision();
+		}
 		if (dead) {
 			kick(player);
 			prev = null;

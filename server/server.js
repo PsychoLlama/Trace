@@ -9,6 +9,9 @@ var game = require('./game');
 // remove inactive players
 require('./game/expire');
 
+// sync system clock with clients
+require('./game/clock');
+
 app.use(express['static'](__dirname + '/../dist'));
 
 var Gun = require('gun/gun');
