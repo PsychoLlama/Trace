@@ -2,9 +2,9 @@
   "name": "tron",
   "version": "1.0.0",
   "description": "Real-time multiplayer tron game using GunDB",
-  "main": "main.js",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node server/server.js 8080",
+    "start": "node server/server.js",
     "test": "echo \"No tests to run!\" && exit 0",
     "build": "webpack --watch"
   },

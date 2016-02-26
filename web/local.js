@@ -8,7 +8,7 @@ var players, gun = new Gun(location + 'gun');
 require('../shared/sync');
 
 // network time sync extension
-require('../lib/nts');
+//require('../lib/nts');
 
 
 

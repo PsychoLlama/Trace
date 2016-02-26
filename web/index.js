@@ -5,10 +5,11 @@ localStorage.clear();
 var join = require('./join');
 var render = require('./render');
 var collision = require('./collision');
-var time = require('./clock');
+//var time = require('./clock');
 
 // join the waitroom
-time(join);
+//time(join);
+join();
 
 // initialize keyboard listeners
 require('./input');
