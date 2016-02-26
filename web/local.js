@@ -4,8 +4,13 @@ var Gun = require('gun/gun');
 
 var players, gun = new Gun(location + 'gun');
 
+// synchronous extension
 require('../shared/sync');
+
+// network time sync extension
 //require('../lib/nts');
+
+
 
 Gun.chain.stringify = function (obj) {
 	return this.put(JSON.stringify(obj));

@@ -2,12 +2,16 @@
 'use strict';
 var express = require('express');
 var app = express();
-var port = process.argv[2] || 8080;
+var port = process.env.PORT || process.argv[2] || 8080;
 var waiting = require('./waitroom');
 var game = require('./game');
 
 // remove inactive players
 require('./game/expire');
+
+// sync system clock with clients
+//require('../lib/nts');
+//require('./game/clock');
 
 app.use(express['static'](__dirname + '/../dist'));
 
