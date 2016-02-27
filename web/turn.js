@@ -40,7 +40,7 @@ module.exports = function (direction) {
 		return;
 	}
 	turn = extract(direction);
-	time = Gun.time.now();
+	time = Gun.time.is();
 
 	if (position.axis === turn.axis) {
 		return;

@@ -10,7 +10,7 @@ function expired(player) {
 	max = Math.max.apply(Math, Object.keys(player));
 
 	// distance travelled is greater than the board, plus latency
-	return (Gun.time.now() - (max + options.latency)) * vel > 700;
+	return (Gun.time.is() - (max + options.latency)) * vel > 700;
 }
 
 /*

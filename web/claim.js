@@ -12,7 +12,7 @@ var invincible = require('./invincibility');
 
 // join the game
 module.exports = function (number) {
-	var start, color, time = Gun.time.now();
+	var start, color, time = Gun.time.is();
 
 	player.db = players.db.path(number).put({});
 	player.index = number;

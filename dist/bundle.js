@@ -1653,7 +1653,7 @@
 
 	// join the game
 	module.exports = function (number) {
-		var start, color, time = Gun.time.now();
+		var start, color, time = Gun.time.is();
 
 		player.db = players.db.path(number).put({});
 		player.index = number;
@@ -2031,7 +2031,7 @@
 		are travelling.
 	*/
 	function distance(coord) {
-		var delta, elapsed = Gun.time.now() - coord.time;
+		var delta, elapsed = Gun.time.is() - coord.time;
 		delta = (elapsed * options.speed) * coord.direction;
 
 		return delta + coord[coord.axis];
@@ -2052,7 +2052,7 @@
 		position = Gun.obj.copy(coord);
 
 		position[coord.axis] = distance(coord);
-		position.time = Gun.time.now();
+		position.time = Gun.time.is();
 
 		return position;
 	};
@@ -2401,7 +2401,7 @@
 			return;
 		}
 		turn = extract(direction);
-		time = Gun.time.now();
+		time = Gun.time.is();
 
 		if (position.axis === turn.axis) {
 			return;
