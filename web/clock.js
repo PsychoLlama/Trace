@@ -20,7 +20,7 @@ module.exports = function (callback) {
 
 			diff = now - (msg.recieved + latency);
 
-			Gun.time.now = function () {
+			Gun.time.is = function () {
 				return Gun.time.is() + Math.round(diff);
 			};
 
