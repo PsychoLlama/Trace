@@ -28,7 +28,7 @@
   "homepage": "https://github.com/PsychoLlama/Tron#readme",
   "dependencies": {
     "express": "^4.13.3",
-    "gun": "^0.3.5"
+    "gun": "^0.5.5"
   },
   "devDependencies": {
     "webpack": "^1.12.13"
