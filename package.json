@@ -31,6 +31,6 @@
     "gun": "^0.3.5"
   },
   "devDependencies": {
-    "webpack": "^1.12.13"
+    "webpack": "^2.3.0"
   }
 }
